@@ -1,0 +1,794 @@
+<title>mProve App Design</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a pool-deck spec sheet. Lane-line rules divide sections; phone mockups sit beside their specs and stack on narrow screens. */
+:root {
+  --bg: #eef3f4;
+  --surface: #ffffff;
+  --ink: #0f2330;
+  --muted: #536b78;
+  --line: #cfdde2;
+  --water: #0b7f8c;
+  --water-soft: #d6eef0;
+  --flag: #e0a400;
+  --flag-soft: #fbefc8;
+  --good: #1d8a4e;
+  --warn: #b86a00;
+  --bad: #c0392b;
+  --phone: #0f2330;
+  --screen: #f7fafb;
+  --display: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", sans-serif;
+  --body: "Figtree", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0b161d; --surface: #12222c; --ink: #e4eef1; --muted: #93abb6; --line: #24404d;
+    --water: #3fc1cc; --water-soft: #12363d; --flag: #f2c230; --flag-soft: #3a3115;
+    --good: #4fc884; --warn: #f0a93b; --bad: #ff7a6b; --phone: #02080b; --screen: #0f1d25;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0b161d; --surface: #12222c; --ink: #e4eef1; --muted: #93abb6; --line: #24404d;
+  --water: #3fc1cc; --water-soft: #12363d; --flag: #f2c230; --flag-soft: #3a3115;
+  --good: #4fc884; --warn: #f0a93b; --bad: #ff7a6b; --phone: #02080b; --screen: #0f1d25;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.55; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-block: 40px 80px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; line-height: 1.05; margin: 0; letter-spacing: .01em; }
+h1 { font-size: clamp(2.6rem, 6vw, 4.2rem); font-weight: 700; }
+h2 { font-size: clamp(1.8rem, 3.6vw, 2.4rem); font-weight: 700; }
+h3 { font-size: 1.4rem; font-weight: 600; }
+p { margin: 0; max-width: 68ch; }
+.eyebrow { font-family: var(--mono); font-size: .74rem; letter-spacing: .12em; text-transform: uppercase; color: var(--water); }
+.muted { color: var(--muted); }
+code, .mono { font-family: var(--mono); font-size: .86em; }
+a { color: var(--water); }
+
+/* Lane-line section divider: the T-mark on a pool floor */
+section { padding-block: 48px 8px; display: grid; gap: 22px; }
+.lane { height: 6px; background: repeating-linear-gradient(90deg, var(--water) 0 22px, transparent 22px 30px); opacity: .35; border-radius: 3px; margin-top: 40px; }
+
+header.hero { display: grid; gap: 18px; padding-bottom: 8px; }
+.hero .sub { font-size: 1.15rem; color: var(--muted); max-width: 62ch; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { font-family: var(--mono); font-size: .74rem; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); white-space: nowrap; }
+.chip.on { background: var(--water-soft); color: var(--water); border-color: transparent; }
+
+/* The loop */
+.loop { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.pillar { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: grid; gap: 10px; align-content: start; }
+.pillar .who { font-family: var(--mono); font-size: .74rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.pillar h3 { color: var(--water); }
+.pillar ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: .95rem; }
+.principles { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px 28px; }
+.principles div { display: grid; gap: 4px; border-top: 2px solid var(--ink); padding-top: 10px; }
+.principles b { font-family: var(--display); font-size: 1.25rem; font-weight: 600; }
+.principles span { font-size: .94rem; color: var(--muted); }
+
+/* Screen rows */
+.tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+.tabs button { font: 600 .95rem var(--body); padding: 8px 16px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.tabs button[aria-selected="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.tabs button:focus-visible, .phone button:focus-visible { outline: 3px solid var(--flag); outline-offset: 2px; }
+.screens { display: grid; gap: 34px; }
+.screen-row { display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 32px; align-items: start; }
+.spec { display: grid; gap: 12px; min-width: 0; }
+.spec .id { font-family: var(--mono); font-size: .78rem; color: var(--water); }
+.spec dl { margin: 0; display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 8px 16px; font-size: .95rem; }
+.spec dt { font-family: var(--mono); font-size: .74rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); padding-top: 3px; }
+.spec dd { margin: 0; }
+.spec dd ul { margin: 0; padding-left: 18px; display: grid; gap: 3px; }
+
+/* Phone mockup */
+.phone { width: 290px; max-width: 100%; background: var(--phone); border-radius: 34px; padding: 10px; box-shadow: 0 18px 40px -22px rgba(6, 30, 40, .55); }
+.scr { background: var(--screen); border-radius: 26px; min-height: 540px; overflow: hidden; display: flex; flex-direction: column; font-size: 13px; color: var(--ink); }
+.status { display: flex; justify-content: space-between; padding: 10px 18px 4px; font-family: var(--mono); font-size: 10.5px; color: var(--muted); }
+.appbar { padding: 6px 16px 10px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.appbar b { font-family: var(--display); font-size: 1.35rem; font-weight: 700; }
+.appbar .pill { font-family: var(--mono); font-size: 10px; padding: 3px 8px; border-radius: 999px; background: var(--water-soft); color: var(--water); }
+.body { padding: 0 14px 14px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; display: grid; gap: 5px; }
+.small { font-size: 11px; color: var(--muted); }
+.row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.tag { font-family: var(--mono); font-size: 9.5px; padding: 2px 6px; border-radius: 5px; background: var(--water-soft); color: var(--water); white-space: nowrap; }
+.tag.warn { background: var(--flag-soft); color: var(--warn); }
+.tag.good { background: color-mix(in srgb, var(--good) 16%, transparent); color: var(--good); }
+.tag.bad { background: color-mix(in srgb, var(--bad) 14%, transparent); color: var(--bad); }
+.btn { font: 600 12.5px var(--body); border-radius: 10px; padding: 9px 12px; text-align: center; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+.btn.primary { background: var(--water); color: var(--surface); border-color: var(--water); }
+.tabbar { display: flex; justify-content: space-around; border-top: 1px solid var(--line); padding: 8px 6px 12px; font-size: 10.5px; color: var(--muted); }
+.tabbar .on { color: var(--water); font-weight: 700; }
+
+/* C1 record */
+.rec { flex: 1; display: grid; place-items: center; }
+.recbtn { width: 190px; height: 190px; border-radius: 50%; background: var(--water); color: var(--surface); display: grid; place-items: center; text-align: center; font-family: var(--display); font-size: 1.6rem; font-weight: 700; line-height: 1; box-shadow: 0 0 0 12px var(--water-soft), 0 0 0 26px color-mix(in srgb, var(--water-soft) 50%, transparent); }
+.recbtn small { display: block; font-family: var(--body); font-size: 11px; font-weight: 500; opacity: .85; margin-top: 6px; }
+.coverage { display: grid; grid-template-columns: repeat(12, 1fr); gap: 3px; }
+.coverage i { height: 16px; border-radius: 3px; background: var(--water); }
+.coverage i.lo { background: var(--flag); }
+.coverage i.no { background: var(--bad); opacity: .75; }
+
+/* journal */
+.slider { height: 6px; border-radius: 3px; background: linear-gradient(90deg, var(--water) var(--v), var(--line) var(--v)); position: relative; }
+.slider::after { content: ""; position: absolute; left: calc(var(--v) - 8px); top: -5px; width: 16px; height: 16px; border-radius: 50%; background: var(--surface); border: 3px solid var(--water); }
+.seg { display: flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; font-size: 11px; }
+.seg span { flex: 1; text-align: center; padding: 5px; }
+.seg .on { background: var(--ink); color: var(--screen); }
+.bubble { padding: 8px 10px; border-radius: 12px; font-size: 12px; max-width: 88%; }
+.bubble.me { background: var(--water); color: var(--surface); justify-self: end; border-bottom-right-radius: 4px; }
+.bubble.them { background: var(--surface); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
+.quote { border-left: 3px solid var(--flag); padding-left: 8px; font-size: 11.5px; color: var(--muted); }
+svg text { font-family: var(--mono); }
+
+/* Flows */
+.flows { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.flow { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.flow ol { margin: 0; padding-left: 20px; display: grid; gap: 6px; font-size: .95rem; }
+.flow ol li::marker { font-family: var(--mono); color: var(--water); font-size: .85em; }
+.flow .edge { font-size: .88rem; color: var(--muted); border-top: 1px dashed var(--line); padding-top: 8px; }
+
+/* Architecture */
+.arch { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--surface); }
+.zone { padding: 18px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.zone + .zone { border-left: 1px solid var(--line); }
+.zone .eyebrow { color: var(--muted); }
+.node { border: 1.5px solid var(--ink); border-radius: 8px; padding: 9px 11px; display: grid; gap: 2px; font-size: .9rem; background: var(--bg); }
+.node b { font-family: var(--display); font-size: 1.1rem; font-weight: 600; }
+.node.ai { border-color: var(--water); background: var(--water-soft); }
+.node.store { border-style: dashed; }
+.arrow { font-family: var(--mono); font-size: .76rem; color: var(--water); padding-left: 10px; }
+pre.json { margin: 0; background: var(--ink); color: var(--bg); border-radius: 10px; padding: 16px; overflow-x: auto; font-family: var(--mono); font-size: .8rem; line-height: 1.5; }
+.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 22px; align-items: start; }
+
+/* Data model */
+.tabsheets { display: grid; gap: 18px; }
+.sheet { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.sheet-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 16px; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+.sheet-head b { font-family: var(--mono); font-size: .95rem; }
+.sheet-head span { font-size: .88rem; color: var(--muted); }
+.tbl { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: .86rem; min-width: 620px; }
+th, td { text-align: left; padding: 7px 16px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--mono); font-size: .7rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 500; }
+td:first-child { font-family: var(--mono); font-size: .8rem; white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+.new { font-family: var(--mono); font-size: .66rem; padding: 1px 5px; border-radius: 4px; background: var(--flag-soft); color: var(--warn); margin-left: 6px; }
+.key { color: var(--water); }
+
+/* Decision table */
+.opt { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.opt > div { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: grid; gap: 8px; align-content: start; }
+.opt > div.pick { border: 2px solid var(--water); }
+.opt ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: .93rem; }
+.risks { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px 28px; }
+.risks div { display: grid; gap: 4px; }
+.risks b { font-weight: 600; }
+.risks span { color: var(--muted); font-size: .94rem; }
+.plan { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.plan > div { border-top: 3px solid var(--water); padding-top: 10px; display: grid; gap: 6px; align-content: start; }
+.plan ul { margin: 0; padding-left: 18px; font-size: .93rem; display: grid; gap: 3px; }
+
+@media (max-width: 860px) {
+  .loop, .flows, .arch, .opt, .split { grid-template-columns: minmax(0, 1fr); }
+  .zone + .zone { border-left: 0; border-top: 1px solid var(--line); }
+  .screen-row { grid-template-columns: minmax(0, 1fr); justify-items: center; }
+  .spec { justify-self: stretch; }
+}
+@media (max-width: 480px) {
+  .spec dl { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .spec dd { margin-bottom: 8px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .recbtn { animation: pulse 2.8s ease-in-out infinite; }
+  @keyframes pulse { 50% { box-shadow: 0 0 0 16px var(--water-soft), 0 0 0 32px color-mix(in srgb, var(--water-soft) 35%, transparent); } }
+}
+</style>
+
+<div class="wrap">
+
+<header class="hero">
+  <div class="eyebrow">App design · Phase 1 MVP · from spec V3</div>
+  <h1>mProve: the deck-to-athlete feedback loop</h1>
+  <p class="sub">Coaches speak a few seconds of feedback during practice. The app turns each note into a row in the team's Google Sheet. Once a week, AI drafts a check-in per athlete for the coach to approve. Athletes reply and keep a training journal, and both feed next week's check-in.</p>
+  <div class="meta">
+    <span class="chip on">Swimming first, multi-sport schema</span>
+    <span class="chip">1 coach · 8–12 pilot athletes</span>
+    <span class="chip">mProve Master Database V2</span>
+    <span class="chip">Coach approves every send</span>
+  </div>
+</header>
+
+<div class="lane"></div>
+<section id="loop">
+  <div class="eyebrow">The three modules</div>
+  <h2>One loop, three people talking</h2>
+  <div class="loop">
+    <div class="pillar">
+      <div class="who">Coach → Athlete</div>
+      <h3>Deck notes & weekly check-in</h3>
+      <ul>
+        <li>Tap-to-record, 3–8 second voice notes</li>
+        <li>One clip can name several athletes; each gets its own row</li>
+        <li>Weekly AI draft, 140–180 words, three parts</li>
+        <li>Coach edits and taps Approve & Send All</li>
+      </ul>
+    </div>
+    <div class="pillar">
+      <div class="who">Athlete → Coach</div>
+      <h3>Replies on a specific cue</h3>
+      <ul>
+        <li>Reply to a whole check-in or to one observation</li>
+        <li>Coach inbox grouped by athlete and squad</li>
+        <li>Close a thread in-app or mark it "addressed at practice"</li>
+      </ul>
+    </div>
+    <div class="pillar">
+      <div class="who">Athlete → Self</div>
+      <h3>Journal & metrics</h3>
+      <ul>
+        <li>RPE and feel sliders, energy, sleep, focus</li>
+        <li>Splits, stroke counts, underwater kicks against a target</li>
+        <li>Private or shared with coach; only shared entries reach the AI</li>
+      </ul>
+    </div>
+  </div>
+  <div class="principles">
+    <div><b>Eyes stay on the pool</b><span>Recording is one tap with no typing on deck. Fixing names and details waits until after practice.</span></div>
+    <div><b>Nothing goes out unseen</b><span>AI writes drafts only. Every check-in needs the coach's approval before it is sent.</span></div>
+    <div><b>The Sheet is the record</b><span>Every note, check-in, reply and journal entry is a row a coach can open, read and edit.</span></div>
+    <div><b>Works without signal</b><span>Notes and journal entries queue on the phone and upload when it reconnects.</span></div>
+  </div>
+</section>
+
+<div class="lane"></div>
+<section id="screens">
+  <div class="eyebrow">Screens</div>
+  <h2>Seven screens, two roles, one app</h2>
+  <p class="muted">Coach and athlete use the same app. What they see depends on their role in <code>Roster_Config</code>. Every screen below is shown with sample data from the spec (Chris, Drew and Alex from your workbook, week of Oct 19, 2026).</p>
+  <div class="tabs" role="tablist">
+    <button role="tab" id="tab-all" aria-selected="true" data-f="all">All screens</button>
+    <button role="tab" id="tab-coach" aria-selected="false" data-f="coach">Coach</button>
+    <button role="tab" id="tab-athlete" aria-selected="false" data-f="athlete">Athlete</button>
+  </div>
+
+  <div class="screens">
+
+    <!-- C1 -->
+    <div class="screen-row" data-role="coach">
+      <div class="phone"><div class="scr">
+        <div class="status"><span>17:42</span><span>offline · 2 queued</span></div>
+        <div class="appbar"><b>On deck</b><span class="pill">Senior · Tue PM</span></div>
+        <div class="body">
+          <div class="card">
+            <div class="row"><span class="small">Coverage this week</span><span class="tag warn">2 under 2 notes</span></div>
+            <div class="coverage" style="grid-template-columns:repeat(3,1fr)"><i></i><i class="lo"></i><i class="no"></i></div><div class="row small"><span>Chris 3</span><span>Drew 1</span><span>Alex 0</span></div>
+          </div>
+          <div class="rec"><div class="recbtn">HOLD<br>TO TALK<small>or tap to start / stop</small></div></div>
+          <div class="card">
+            <div class="row"><b>Last note · 0:06</b><span class="tag">2 athletes</span></div>
+            <div class="small">"Chris, 100 fly, great hip drive off wall three, head down last 15…"</div>
+          </div>
+        </div>
+        <div class="tabbar"><span class="on">Deck</span><span>Review</span><span>Inbox · 1</span><span>Weekly</span></div>
+      </div></div>
+      <div class="spec">
+        <div class="id">C1 · Coach</div>
+        <h3>On deck: capture</h3>
+        <p>The screen open during practice, built to work with wet hands from a phone in a pouch.</p>
+        <dl>
+          <dt>Main action</dt><dd>A record button that fills most of the screen. Hold to talk, or tap to start and stop. A clip-on Bluetooth mic's button and an Apple Watch shortcut trigger the same recording.</dd>
+          <dt>Shows</dt><dd><ul><li>Current session (squad + day), set once before practice</li><li>Coverage strip: one block per athlete. Teal means 2 or more notes this week, yellow means 1, red means none</li><li>Last note's transcript preview and how many athletes were detected</li><li>Upload state: synced, uploading, or queued offline</li></ul></dd>
+          <dt>Rules</dt><dd>No typing, menus or confirmation dialogs. A short vibration confirms the note was saved. Audio is stored on the phone before any upload starts.</dd>
+        </dl>
+      </div>
+    </div>
+
+    <!-- C2 -->
+    <div class="screen-row" data-role="coach">
+      <div class="phone"><div class="scr">
+        <div class="status"><span>19:10</span><span>synced</span></div>
+        <div class="appbar"><b>Review</b><span class="pill">4 to check</span></div>
+        <div class="body">
+          <div class="card">
+            <div class="row"><b>Chris R.</b><span class="tag good">98% match</span></div>
+            <div class="row"><span class="tag">Butterfly</span><span class="tag">Underwaters & Finish</span><span class="tag">Strength + Correction</span></div>
+            <div class="small">Hit 6 dolphin kicks off every wall; lifted head breathing into final 10m.</div>
+          </div>
+          <div class="card">
+            <div class="row"><b>Drew C.?</b><span class="tag warn">Name unsure</span></div>
+            <div class="small">Heard "Dru". Pick the athlete:</div>
+            <div class="seg"><span class="on">Drew C.</span><span>Alex C.</span><span>Other</span></div>
+            <div class="small">Dropped right elbow on 3rd 50 of threshold set; strong kick tempo.</div>
+          </div>
+          <div class="card">
+            <div class="row"><b>Alex C.</b><span class="tag good">95% match</span></div>
+            <div class="small">Great momentum into the turns on the 200s.</div>
+          </div>
+          <div class="btn primary">Confirm all 4</div>
+          <div class="small" style="text-align:center">▶ Play original clip · Edit · Split differently</div>
+        </div>
+        <div class="tabbar"><span>Deck</span><span class="on">Review</span><span>Inbox · 1</span><span>Weekly</span></div>
+      </div></div>
+      <div class="spec">
+        <div class="id">C2 · Coach</div>
+        <h3>Review parsed notes</h3>
+        <p>A quick pass after practice. Most rows are already right, and only uncertain ones ask for a decision.</p>
+        <dl>
+          <dt>Shows</dt><dd><ul><li>One card per row the AI extracted, already split by athlete</li><li>Stroke/event, focus area and observation type as tags</li><li>A match score for the athlete's name, checked against names and <code>Phonetic_Aliases</code></li></ul></dd>
+          <dt>Actions</dt><dd>Confirm all, pick the right athlete for an unsure name, edit text, replay the clip, or delete a row.</dd>
+          <dt>Rules</dt><dd>Rows are written to the Sheet right away with <code>Review_Status = Auto</code>. A row with a name match below 85% is marked <code>Needs_Review</code> and left out of the weekly check-in until the coach confirms it. Notes that never get reviewed still count, so skipping this screen does not lose data.</dd>
+        </dl>
+      </div>
+    </div>
+
+    <!-- C3 -->
+    <div class="screen-row" data-role="coach">
+      <div class="phone"><div class="scr">
+        <div class="status"><span>15:40</span><span>synced</span></div>
+        <div class="appbar"><b>Inbox</b><span class="pill">1 unread</span></div>
+        <div class="body">
+          <div class="card">
+            <div class="row"><b>Chris R.</b><span class="tag bad">Unread</span></div>
+            <div class="quote">OBS-101 · Hit 6 dolphin kicks off every wall; lifted head breathing into final 10m.</div>
+            <div class="small">"Should I focus on tucking my chin earlier or skip the breath on the last two strokes?"</div>
+            <div class="row"><span class="btn" style="flex:1">Reply</span><span class="btn" style="flex:1">At practice</span></div>
+          </div>
+          <div class="card">
+            <div class="row"><b>Chris R.</b><span class="tag good">Resolved</span></div>
+            <div class="small">THR-042 · "Take one last low breath right at the flags (5m)…"</div>
+          </div>
+          <div class="card">
+            <div class="row"><b>Needs attention</b><span class="small">this week</span></div>
+            <div class="row"><span>Alex C.</span><span class="tag bad">0 notes</span></div>
+            <div class="row"><span>Drew C.</span><span class="tag warn">1 note</span></div>
+          </div>
+        </div>
+        <div class="tabbar"><span>Deck</span><span>Review</span><span class="on">Inbox · 1</span><span>Weekly</span></div>
+      </div></div>
+      <div class="spec">
+        <div class="id">C3 · Coach</div>
+        <h3>Inbox & coverage</h3>
+        <p>Athlete questions and the "who haven't I talked to" list in one place.</p>
+        <dl>
+          <dt>Shows</dt><dd><ul><li>Threads grouped by athlete, newest first, each showing the observation or check-in it replies to</li><li>The athletes with fewer than 2 notes this week, from <code>Coach_Feedback_Log</code></li></ul></dd>
+          <dt>Actions</dt><dd>Reply in-app (sets <code>Replied_in_App</code>), or tap "At practice" to mark <code>Addressed_at_Practice</code> without typing.</dd>
+          <dt>Badge</dt><dd>The Inbox tab shows the count of <code>Unread</code> threads. Before practice, the On deck screen lists the athletes with open questions so the coach can answer them in person.</dd>
+        </dl>
+      </div>
+    </div>
+
+    <!-- C4 -->
+    <div class="screen-row" data-role="coach">
+      <div class="phone"><div class="scr">
+        <div class="status"><span>Sun 20:05</span><span>synced</span></div>
+        <div class="appbar"><b>Weekly</b><span class="pill">Oct 19–25</span></div>
+        <div class="body">
+          <div class="row"><span class="small">3 athletes · 1 draft · 2 skipped</span><span class="tag warn">1 pending</span></div>
+          <div class="card">
+            <div class="row"><b>Chris R.</b><span class="tag warn">Pending review</span></div>
+            <div class="small"><b>Wins:</b> You hit 6 dolphin kicks off every wall on Tuesday's 8x100 fly set, and after asking about breath timing you held 28.4s with no breaths inside the flags…</div>
+            <div class="small"><b>Next week:</b> Carry the eyes-down finish into the 3rd and 4th 25s of your 100 fly sets.</div>
+            <div class="row"><span class="small">3 notes · 1 thread · 2 journal entries</span><span class="small">162 words</span></div>
+            <div class="row"><span class="btn" style="flex:1">Edit</span><span class="btn" style="flex:1">Approve</span></div>
+          </div>
+          <div class="card">
+            <div class="row"><b>Alex C. · Drew C.</b><span class="tag bad">Not enough data</span></div>
+            <div class="small">Alex has no notes and Drew has one. Drafts skipped. Record more at Monday's practice, or write a short note here.</div>
+          </div>
+          <div class="btn primary">Approve & Send All (1)</div>
+        </div>
+        <div class="tabbar"><span>Deck</span><span>Review</span><span>Inbox · 1</span><span class="on">Weekly</span></div>
+      </div></div>
+      <div class="spec">
+        <div class="id">C4 · Coach</div>
+        <h3>Weekly check-in review</h3>
+        <p>The 5–10 minute weekly task. Every draft is visible and editable, and nothing is sent without approval.</p>
+        <dl>
+          <dt>Shows</dt><dd><ul><li>One draft per athlete with its word count and the rows it was built from (tap to see them)</li><li>A status for each: <code>Pending Review</code>, <code>Approved</code>, <code>Sent</code></li><li>Athletes with too little data, flagged instead of padded with filler</li></ul></dd>
+          <dt>Actions</dt><dd>Edit inline, approve one, regenerate one, or Approve & Send All. The send-all button only sends drafts the coach has opened or approved.</dd>
+          <dt>Delivery</dt><dd>Email to the athlete with the parent on CC (from <code>Roster_Config</code>), plus the check-in appearing in the athlete's app. <code>Sent_Timestamp</code> is written back to the Sheet.</dd>
+        </dl>
+      </div>
+    </div>
+
+    <!-- A1 -->
+    <div class="screen-row" data-role="athlete">
+      <div class="phone"><div class="scr">
+        <div class="status"><span>Mon 07:12</span><span>synced</span></div>
+        <div class="appbar"><b>Check-in</b><span class="pill">Week of Oct 19</span></div>
+        <div class="body">
+          <div class="card">
+            <div class="small">From your coach · Sent Sun 20:06</div>
+            <b>Great progress on fly finishes & free breakouts</b>
+            <div class="small"><b>Wins & highlights.</b> 6 dolphin kicks off every wall on Tuesday's 8x100 fly. Tighter streamline on Thursday's threshold 200s…</div>
+            <div class="small"><b>Focus for next week.</b> Carry the eyes-down, no-breath finish into the 3rd and 4th 25s of your 100 fly.</div>
+            <div class="small"><b>Coach's note.</b> Reply here if you want to review video Monday.</div>
+          </div>
+          <div class="small">Practice notes this week (3) ›</div>
+          <div class="bubble me">Yes please, video Monday! Can we look at my last 2 strokes?</div>
+          <div class="bubble them">Sure. Come 10 minutes early and we'll film the sprint 50s.</div>
+          <div class="card"><span class="small">Reply to your coach…</span></div>
+        </div>
+        <div class="tabbar"><span class="on">Check-ins</span><span>Journal</span><span>Progress</span></div>
+      </div></div>
+      <div class="spec">
+        <div class="id">A1 · Athlete</div>
+        <h3>Weekly check-in & replies</h3>
+        <p>The athlete's written record of what to work on, with a direct line back to the coach.</p>
+        <dl>
+          <dt>Shows</dt><dd><ul><li>The latest check-in, with earlier weeks below</li><li>The practice notes it was built from, each with its own reply button</li><li>The conversation with the coach about this check-in</li></ul></dd>
+          <dt>Actions</dt><dd>Reply by typing or by voice-to-text. Replying to a single note links the thread to that <code>Obs_ID</code>, as in THR-042.</dd>
+          <dt>Rules</dt><dd>Athletes see only their own rows. Notes the coach hasn't confirmed, and drafts not yet sent, are never shown.</dd>
+        </dl>
+      </div>
+    </div>
+
+    <!-- A2 -->
+    <div class="screen-row" data-role="athlete">
+      <div class="phone"><div class="scr">
+        <div class="status"><span>19:35</span><span>offline · saved</span></div>
+        <div class="appbar"><b>Log practice</b><span class="pill">Thu Oct 23</span></div>
+        <div class="body">
+          <div class="seg"><span class="on">Swim</span><span>Dryland</span><span>Meet</span><span>Rest</span></div>
+          <div class="card"><div class="row"><span>Effort (RPE)</span><b>9</b></div><div class="slider" style="--v:90%"></div></div>
+          <div class="card"><div class="row"><span>Feel / energy</span><b>9</b></div><div class="slider" style="--v:90%"></div></div>
+          <div class="card">
+            <div class="row"><span>Set</span><b>Sprint 50s fly</b></div>
+            <div class="row"><span class="small">50m pace</span><span class="mono">28.4s <span class="small">target 28.5</span></span></div>
+            <div class="row"><span class="small">Breaths inside flags</span><span class="mono">0 <span class="tag good">hit</span></span></div>
+            <span class="small">+ Add metric</span>
+          </div>
+          <div class="card"><span class="small">🎙 "Breathing at the flags and keeping eyes down for the last 2 strokes felt much faster into the wall."</span></div>
+          <div class="seg"><span class="on">Share with coach</span><span>Private</span></div>
+          <div class="btn primary">Save entry</div>
+        </div>
+        <div class="tabbar"><span>Check-ins</span><span class="on">Journal</span><span>Progress</span></div>
+      </div></div>
+      <div class="spec">
+        <div class="id">A2 · Athlete</div>
+        <h3>Journal entry</h3>
+        <p>Logging takes under a minute after practice: two sliders, one metric, one sentence.</p>
+        <dl>
+          <dt>Inputs</dt><dd><ul><li>Session type, RPE 1–10, feel/energy 1–10. Sleep and focus are optional and collapsed by default</li><li>One or more metrics: type (50m pace, stroke count, underwaters…), value, target. Hit or miss is calculated</li><li>Reflection, typed or dictated</li><li>Visibility, defaulting to Share with coach</li></ul></dd>
+          <dt>Storage</dt><dd>One row per metric in <code>Athlete_Self_Journal</code>, sharing the same <code>Journal_ID</code>. Entries save on the phone first and upload when online.</dd>
+          <dt>Rules</dt><dd>Private entries never reach the coach view or the AI.</dd>
+        </dl>
+      </div>
+    </div>
+
+    <!-- A3 -->
+    <div class="screen-row" data-role="athlete">
+      <div class="phone"><div class="scr">
+        <div class="status"><span>Fri 21:00</span><span>synced</span></div>
+        <div class="appbar"><b>Progress</b><span class="pill">Fly · 50m pace</span></div>
+        <div class="body">
+          <div class="card">
+            <div class="row"><span class="small">Sprint 50 fly · avg time</span><b class="mono">28.4s</b></div>
+            <svg viewBox="0 0 230 110" width="100%" role="img" aria-label="50m fly pace improving from 29.6 to 28.4 seconds over five weeks">
+              <line x1="18" y1="8" x2="222" y2="8" stroke="var(--line)" stroke-width="1"/>
+              <line x1="18" y1="43" x2="222" y2="43" stroke="var(--line)" stroke-width="1"/>
+              <line x1="18" y1="78" x2="222" y2="78" stroke="var(--line)" stroke-width="1"/>
+              <text x="0" y="11" font-size="8" fill="var(--muted)">28.0</text>
+              <text x="0" y="46" font-size="8" fill="var(--muted)">29.0</text>
+              <text x="0" y="81" font-size="8" fill="var(--muted)">30.0</text>
+              <line x1="30" y1="29" x2="222" y2="29" stroke="var(--flag)" stroke-width="1.2" stroke-dasharray="4 3"/>
+              <text x="186" y="25" font-size="7.5" fill="var(--warn)">target 28.6</text>
+              <path d="M30,64 L78,53.5 L126,46.5 L174,39.5 L222,22 L222,78 L30,78 Z" fill="var(--water)" fill-opacity=".14"/>
+              <polyline points="30,64 78,53.5 126,46.5 174,39.5 222,22" fill="none" stroke="var(--water)" stroke-width="2"/>
+              <circle cx="222" cy="22" r="3.5" fill="var(--water)"/>
+              <text x="22" y="96" font-size="7.5" fill="var(--muted)">Sep 22</text>
+              <text x="200" y="96" font-size="7.5" fill="var(--muted)">Oct 23</text>
+              <text x="88" y="107" font-size="7" fill="var(--muted)">higher on chart = faster</text>
+            </svg>
+          </div>
+          <div class="card">
+            <div class="row"><span class="small">Strokes per 25m · fly</span><b class="mono">14</b></div>
+            <div class="row"><span class="small">Underwater kicks off walls</span><b class="mono">6</b></div>
+            <div class="row"><span class="small">Avg RPE this week</span><b class="mono">8.5</b></div>
+          </div>
+          <div class="card">
+            <div class="small">Linked coach note · Oct 23</div>
+            <div class="small">"Kept chin neutral into the finish on sprint 50s, fixed Tuesday's head lift."</div>
+          </div>
+        </div>
+        <div class="tabbar"><span>Check-ins</span><span>Journal</span><span class="on">Progress</span></div>
+      </div></div>
+      <div class="spec">
+        <div class="id">A3 · Athlete</div>
+        <h3>Progress</h3>
+        <p>Journal numbers over time, shown next to what the coach said on the same days.</p>
+        <dl>
+          <dt>Shows</dt><dd><ul><li>One chart per metric type with the target line. For times, faster is drawn higher</li><li>Latest stroke count, underwater kicks and average RPE</li><li>Coach notes from the same week in the same event</li></ul></dd>
+          <dt>Phase</dt><dd>A simple version ships in Phase 1 because it reads the athlete's own rows only. Comparisons across the season and squad are left for Phase 3 and later.</dd>
+        </dl>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<div class="lane"></div>
+<section id="flows">
+  <div class="eyebrow">User flows</div>
+  <h2>How a note travels</h2>
+  <div class="flows">
+    <div class="flow">
+      <h3>Capture a deck note</h3>
+      <ol>
+        <li>Coach holds the button and says "Chris had strong turns; Drew dropped his elbow on the turn."</li>
+        <li>The phone saves the audio and the session tag, then vibrates. If offline, the note waits in the queue.</li>
+        <li>On upload, the backend saves the clip to Drive and sends it to Gemini with the roster and swim vocabulary.</li>
+        <li>Gemini returns one object per athlete mentioned. Each one becomes a row in <code>Coach_Feedback_Log</code>.</li>
+        <li>Rows with an unsure name go to the Review screen (C2). The rest are ready.</li>
+      </ol>
+      <div class="edge">If no athlete is recognised, the row is saved with a blank <code>Athlete_ID</code> and flagged, so the note is never dropped.</div>
+    </div>
+    <div class="flow">
+      <h3>Weekly check-in</h3>
+      <ol>
+        <li>Sunday 18:00, a scheduled script (or the coach's menu button) collects the last 7 days of rows for each athlete.</li>
+        <li>It includes confirmed deck notes, Q&amp;A threads, and journal rows marked <code>Coach_Shared</code>.</li>
+        <li>Gemini drafts a 140–180 word check-in using the spec's prompt. The draft goes to <code>Weekly_Digests</code> as <code>Pending Review</code>.</li>
+        <li>Coach reviews in C4 or directly in the Sheet, edits, and approves.</li>
+        <li>Approve & Send All emails each athlete (parent on CC), shows it in the app, and marks the row <code>Sent</code>.</li>
+      </ol>
+      <div class="edge">An athlete with fewer than 2 notes and no journal entries gets no draft. They show up as "Not enough data" for the coach.</div>
+    </div>
+    <div class="flow">
+      <h3>Athlete asks a question</h3>
+      <ol>
+        <li>Athlete opens a note or check-in and taps Reply.</li>
+        <li>A row is added to <code>Athlete_Coach_Threads</code> with <code>Sender_Role = Athlete</code> and status <code>Unread</code>.</li>
+        <li>The coach's Inbox badge goes up. The question also appears on the On deck screen before the next practice.</li>
+        <li>Coach replies (<code>Replied_in_App</code>) or answers in person (<code>Addressed_at_Practice</code>).</li>
+        <li>The exchange is included in that week's check-in.</li>
+      </ol>
+    </div>
+    <div class="flow">
+      <h3>Athlete logs a practice</h3>
+      <ol>
+        <li>After practice, a reminder (sent 30 minutes after the session ends) opens the Journal screen.</li>
+        <li>Athlete sets RPE and feel, adds a metric against a target, and dictates a sentence.</li>
+        <li>The entry saves on the phone and uploads to <code>Athlete_Self_Journal</code>.</li>
+        <li>Shared entries appear on the athlete's coach view and feed the weekly draft. Private ones stay with the athlete.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<div class="lane"></div>
+<section id="data">
+  <div class="eyebrow">Data model · mProve Master Database V2</div>
+  <h2>Your workbook, ready for the app</h2>
+  <p class="muted">These are the columns already in your Google Sheet, with the sample rows it holds (Chris, Drew and Alex, week of Oct 19). Columns marked <span class="new">add</span> are ones the screens above need. <span class="key">Teal</span> columns link to another table.</p>
+
+  <div class="sheet" style="border-color: var(--flag)">
+    <div class="sheet-head"><b>One change to the layout first</b><span>Stacked tables → five tabs</span></div>
+    <div style="padding: 14px 16px; display: grid; gap: 8px; font-size: .95rem">
+      <p>Right now all five tables are stacked in one sheet, with the table name in column A and a header row above each block. That reads well, but the app can't add rows safely: a new deck note belongs in the middle of the sheet, and inserting it there shifts every table below. Each table needs its own tab with the header in row 1, so new rows simply go at the bottom.</p>
+      <p>The header rows also show <code>#ERROR!</code> in column A. That usually means the cell's text starts with <code>=</code>, <code>+</code> or <code>-</code>, so Sheets reads it as a formula. Moving to separate tabs removes those cells.</p>
+      <p class="muted">The column names stay as you have them. The split is a copy-and-paste, and I'd keep your current sheet as an archive tab.</p>
+    </div>
+  </div>
+
+  <div class="tabsheets">
+
+    <div class="sheet">
+      <div class="sheet-head"><b>Roster_Config</b><span>3 athletes today. One row per person.</span></div>
+      <div class="tbl"><table>
+        <tr><th>Column</th><th>In your sheet</th><th>Notes</th></tr>
+        <tr><td>Athlete_ID</td><td>ATH-001</td><td>Primary key</td></tr>
+        <tr><td>First_Name, Last_Name</td><td>Chris · Rus</td><td></td></tr>
+        <tr><td>Phonetic_Aliases</td><td>Chris, Christopher, Kris</td><td>Sent to Gemini for name matching. "Andrew" is listed for Drew, so a note saying "Andrew" goes to Drew automatically</td></tr>
+        <tr><td>Squad_Group, Sport_Discipline</td><td>Senior Performance · Swimming</td><td>Squad picks the roster for a session</td></tr>
+        <tr><td>Primary_Events_Positions</td><td>100 Fly, 200 Fly, 200 Free</td><td>Helps the parser when a note doesn't name the stroke</td></tr>
+        <tr><td>Athlete_Email, Parent_Email</td><td>email</td><td>Sign-in identity and check-in recipients</td></tr>
+        <tr><td>Role<span class="new">add</span></td><td>Athlete · Coach</td><td>Notes use <code>COACH-01</code>, but no coach row exists. Adding coaches here (COACH-01, name, email) lets the coach sign in</td></tr>
+        <tr><td>Active<span class="new">add</span></td><td>yes/no</td><td>Hides athletes who leave without deleting their history</td></tr>
+      </table></div>
+    </div>
+
+    <div class="sheet">
+      <div class="sheet-head"><b>Coach_Feedback_Log</b><span>4 notes today. One row per athlete per voice note, never edited by the app after review.</span></div>
+      <div class="tbl"><table>
+        <tr><th>Column</th><th>In your sheet</th><th>Notes</th></tr>
+        <tr><td>Obs_ID</td><td>OBS-101</td><td>Next number assigned by the backend</td></tr>
+        <tr><td>Timestamp</td><td>2026-10-20 17:14</td><td>When recorded on the phone, not when uploaded</td></tr>
+        <tr><td class="key">Coach_ID, Athlete_ID</td><td>COACH-01 · ATH-001</td><td>Athlete_ID left blank if no name matched</td></tr>
+        <tr><td>Athlete_Name</td><td>Chris Rus</td><td>Kept for reading the sheet by eye. The app fills it from the roster</td></tr>
+        <tr><td>Event_Stroke, Focus_Area, Observation_Type</td><td>Butterfly · Underwaters & Finish · Strength + Correction</td><td>I'd turn these into dropdowns from your existing values so Gemini picks from a fixed list</td></tr>
+        <tr><td>Cleaned_Note, Raw_Transcript</td><td>text</td><td>The coach edits Cleaned_Note. Raw stays as heard</td></tr>
+        <tr><td>Week_Start_Date</td><td>2026-10-19</td><td>Monday of the note's week. This is what the weekly check-in groups by</td></tr>
+        <tr><td>Clip_ID<span class="new">add</span></td><td>CLIP-0031</td><td>Links rows split from one recording</td></tr>
+        <tr><td>Audio_Link<span class="new">add</span></td><td>Drive URL</td><td>Replay on the Review screen. Deleted after 30 days</td></tr>
+        <tr><td>Match_Confidence<span class="new">add</span></td><td>0–1</td><td>How sure the parser is about the name</td></tr>
+        <tr><td>Review_Status<span class="new">add</span></td><td>Auto · Needs_Review · Confirmed</td><td>Needs_Review rows stay out of check-ins until confirmed</td></tr>
+      </table></div>
+    </div>
+
+    <div class="sheet">
+      <div class="sheet-head"><b>Weekly_Digests</b><span>1 draft today, Pending Review. One row per athlete per week.</span></div>
+      <div class="tbl"><table>
+        <tr><th>Column</th><th>In your sheet</th><th>Notes</th></tr>
+        <tr><td>Digest_ID</td><td>DIG-20261019-001</td><td>Week start + athlete number. Rerunning a week replaces the draft instead of adding a second one</td></tr>
+        <tr><td>Week_Start_Date</td><td>2026-10-19</td><td></td></tr>
+        <tr><td class="key">Athlete_ID</td><td>ATH-001</td><td>Plus Athlete_Name for reading</td></tr>
+        <tr><td>Recipient_Emails</td><td>athlete, parent</td><td>Copied from the roster when the draft is made, so it records who it actually went to</td></tr>
+        <tr><td class="key">Linked_Obs_IDs, Linked_Thread_IDs, Linked_Journal_IDs</td><td>OBS-101, OBS-108, OBS-115 · THR-042 · JRN-301, JRN-309</td><td>What the draft was built from. Shown on the Weekly screen</td></tr>
+        <tr><td>AI_Draft_Summary</td><td>text</td><td>Gemini's draft, never overwritten</td></tr>
+        <tr><td>Final_Text<span class="new">add</span></td><td>text</td><td>What the coach approved. This is what gets sent, so the original draft stays for comparison</td></tr>
+        <tr><td>Coach_Approval_Status</td><td>Pending Review</td><td>Pending Review · Approved · Sent, plus Skipped<span class="new">add</span> for "not enough data"</td></tr>
+        <tr><td>Sent_Timestamp</td><td>empty</td><td>Written when the email goes out</td></tr>
+      </table></div>
+    </div>
+
+    <div class="sheet">
+      <div class="sheet-head"><b>Athlete_Coach_Threads</b><span>2 messages today, both THR-042. One row per message.</span></div>
+      <div class="tbl"><table>
+        <tr><th>Column</th><th>In your sheet</th><th>Notes</th></tr>
+        <tr><td>Thread_ID</td><td>THR-042</td><td>Shared by every message in one conversation</td></tr>
+        <tr><td class="key">Ref_ID</td><td>OBS-101</td><td>A note (OBS-) or a check-in (DIG-)</td></tr>
+        <tr><td>Timestamp</td><td>2026-10-21 19:30</td><td></td></tr>
+        <tr><td class="key">Athlete_ID</td><td>ATH-001</td><td>Always the athlete, even on the coach's reply. Plus Athlete_Name</td></tr>
+        <tr><td>Sender_Role</td><td>Athlete · Coach</td><td></td></tr>
+        <tr><td>Message_Text, Question_Category</td><td>text · Breath Timing / Finish</td><td>Category filled in by Gemini</td></tr>
+        <tr><td>Resolution_Status</td><td>Replied_in_App · Resolved</td><td>Plus Unread and Addressed_at_Practice from the spec</td></tr>
+        <tr><td>Message_ID<span class="new">add</span></td><td>MSG-0001</td><td>Both rows share THR-042, so nothing identifies a single message today. Needed to edit or mark one as read</td></tr>
+      </table></div>
+    </div>
+
+    <div class="sheet">
+      <div class="sheet-head"><b>Athlete_Self_Journal</b><span>2 entries today. One row per metric.</span></div>
+      <div class="tbl"><table>
+        <tr><th>Column</th><th>In your sheet</th><th>Notes</th></tr>
+        <tr><td>Jrn_ID</td><td>JRN-309</td><td>An entry with two metrics becomes two rows with the same Jrn_ID</td></tr>
+        <tr><td>Date, Session_Type</td><td>2026-10-23 · PM Pool Practice</td><td></td></tr>
+        <tr><td class="key">Athlete_ID</td><td>ATH-001</td><td>Plus Athlete_Name</td></tr>
+        <tr><td>RPE_1_to_10, Feel_1_to_10</td><td>9 · 9</td><td></td></tr>
+        <tr><td>Event_Set</td><td>Sprint 50s Fly</td><td></td></tr>
+        <tr><td>Metric_Type</td><td>Split Time & Breaths</td><td>Becomes one type per row: "50m Pace", "Breaths Inside Flags"</td></tr>
+        <tr><td>Metric_Value</td><td>28.4s Avg / 0 Breaths Inside Flags</td><td>Today this holds two numbers as text, which the Progress chart can't plot. Stored as a plain number per row instead: 28.4, then 0</td></tr>
+        <tr><td>Metric_Unit<span class="new">add</span></td><td>s · count · strokes/25m</td><td>Goes with the number above</td></tr>
+        <tr><td>Target_Goal<span class="new">add</span></td><td>28.5</td><td>In the spec but not the sheet. Drives the hit/miss tag and the target line</td></tr>
+        <tr><td>Personal_Reflection</td><td>text</td><td></td></tr>
+        <tr><td>Visibility</td><td>Coach_Shared · Private</td><td>Private rows never reach the coach view or Gemini</td></tr>
+        <tr><td>Sleep_Quality, Mental_Focus<span class="new">add</span></td><td>1–5, optional</td><td>Named in the spec's journal module, missing from both spec tab and sheet</td></tr>
+      </table></div>
+    </div>
+
+  </div>
+</section>
+
+<div class="lane"></div>
+<section id="architecture">
+  <div class="eyebrow">Phase 1 architecture</div>
+  <h2>What runs where</h2>
+  <div class="arch">
+    <div class="zone">
+      <div class="eyebrow">On the phone</div>
+      <div class="node"><b>mProve web app</b><span class="muted">Installable from the browser, no app store. Coach and athlete screens</span></div>
+      <div class="node store"><b>Offline queue</b><span class="muted">Audio clips and journal entries stored in the browser until upload</span></div>
+      <div class="node"><b>Capture shortcuts</b><span class="muted">Apple Watch Action Button or iOS Shortcut posting to the same upload address</span></div>
+      <div class="arrow">↘ uploads audio + session tag</div>
+    </div>
+    <div class="zone">
+      <div class="eyebrow">Google (backend)</div>
+      <div class="node"><b>Apps Script web app</b><span class="muted">Single endpoint: receive notes, read/write rows, check who is signed in</span></div>
+      <div class="node ai"><b>Gemini API</b><span class="muted">Audio → JSON per athlete. Weekly rows → check-in draft</span></div>
+      <div class="node store"><b>Google Sheet (5 tabs)</b><span class="muted">All records. Coach can edit directly</span></div>
+      <div class="node store"><b>Drive folder</b><span class="muted">Original audio clips</span></div>
+      <div class="node"><b>Weekly trigger</b><span class="muted">Sunday 18:00 drafts, plus a menu button in the Sheet</span></div>
+    </div>
+    <div class="zone">
+      <div class="eyebrow">Out to athletes</div>
+      <div class="node"><b>Gmail</b><span class="muted">Approved check-ins to athlete, parent on CC</span></div>
+      <div class="node"><b>Athlete screens</b><span class="muted">Same web app, showing only the athlete's own rows</span></div>
+      <div class="arrow">↖ replies and journal entries go back through the same endpoint</div>
+    </div>
+  </div>
+
+  <div class="split">
+    <div style="display:grid; gap:12px">
+      <h3>Parsing contract</h3>
+      <p>The audio goes to Gemini together with the squad roster (names and aliases) and the sport's lists of events and focus areas. Gemini must return a JSON array that matches this shape, or the request is retried once and then saved as a single flagged row.</p>
+      <p class="muted">The spec's example clip ("Chris had strong turns; Drew dropped his elbow on the turn; Alex had great momentum") returns three objects, which become three rows sharing one <code>Clip_ID</code>.</p>
+    </div>
+    <pre class="json">[
+  {
+    "athlete_id": "ATH-004",
+    "heard_as": "Chris",
+    "match_confidence": 0.98,
+    "event_stroke": "Butterfly",
+    "focus_area": "Underwaters & Finish",
+    "observation_type": "Strength + Correction",
+    "cleaned_note": "Great hip drive off wall three; keep head down on the last 15m.",
+    "raw_segment": "Chris, 100 fly main set, great hip drive…"
+  },
+  {
+    "athlete_id": "ATH-007",
+    "heard_as": "Dru",
+    "match_confidence": 0.71,
+    "event_stroke": "Freestyle",
+    "focus_area": "Turns & Breakout",
+    "observation_type": "Correction",
+    "cleaned_note": "Dropped elbow on the turn.",
+    "raw_segment": "Drew dropped his elbow on the turn"
+  }
+]</pre>
+  </div>
+</section>
+
+<div class="lane"></div>
+<section id="stack">
+  <div class="eyebrow">Stack choice</div>
+  <h2>Option A, Option B, or a mix</h2>
+  <div class="opt">
+    <div>
+      <h3>A · Weekend build</h3>
+      <p class="muted">iOS Shortcut to Drive, Google Forms or AppSheet for athletes, Apps Script menu buttons.</p>
+      <ul><li>Running at practice within days</li><li>No offline queue, no coverage strip, no inbox</li><li>Athletes use separate forms, so replies don't sit next to the check-in</li></ul>
+    </div>
+    <div class="pick">
+      <h3>A+ · Recommended for Phase 1</h3>
+      <p class="muted">Option A's Google backend, with the one web app designed above in front of it.</p>
+      <ul><li>Delivers screens C1–C4 and A1–A3 as designed</li><li>Free to run at pilot size, apart from small Gemini costs</li><li>About 2 weeks to build, which fits the spec's Phase 1 window</li><li>The Sheet stays the record, so moving to Option B later doesn't lose data</li></ul>
+    </div>
+    <div>
+      <h3>B · Club scale</h3>
+      <p class="muted">React Native or Flutter, a FastAPI or Cloud Function backend, Firebase or Supabase synced to Sheets.</p>
+      <ul><li>Native Bluetooth mic control and push notifications</li><li>Handles many squads and season-long analytics</li><li>Several weeks of work, and app store review. Better after the Phase 2 pilot shows what coaches actually use</li></ul>
+    </div>
+  </div>
+</section>
+
+<div class="lane"></div>
+<section id="risks">
+  <div class="eyebrow">Before building</div>
+  <h2>Things to settle</h2>
+  <div class="risks">
+    <div><b>Minors' data and consent</b><span>Most pilot athletes are under 18 and some are under 13. Get parental consent before recording names in voice notes, and set how long audio is kept (30 days is suggested).</span></div>
+    <div><b>Athletes can't open the Sheet</b><span>Sharing the Sheet would let every athlete read every other athlete's notes. Athletes only see their data through the app, and the backend filters rows by the signed-in email.</span></div>
+    <div><b>Email sending limits</b><span>Apps Script on a personal Gmail account can email about 100 recipients a day. A Google Workspace account allows about 1,500. A 12-athlete pilot with parents on CC is around 24, which is fine. Sending for a whole club would need Workspace or Option B.</span></div>
+    <div><b>Two notes saved at once</b><span>Two uploads arriving together could write to the same row. The backend locks the Sheet briefly for each write.</span></div>
+    <div><b>Deck noise</b><span>Whistles, echo and splashing will hurt accuracy. Phase 2 tests the phone's built-in mic against a clip-on mic. Name matching is the part to measure most closely.</span></div>
+    <div><b>Which Google account</b><span>The Sheet, Drive folder and script need one owner, ideally a club account rather than a coach's personal one, so the data stays with the club.</span></div>
+  </div>
+</section>
+
+<div class="lane"></div>
+<section id="plan">
+  <div class="eyebrow">Phase 1 build plan · weeks 1–2</div>
+  <h2>What gets built, in order</h2>
+  <div class="plan">
+    <div><h3>Days 1–2 · Workbook</h3><ul><li>Create the five tabs with columns, dropdowns and protected headers</li><li>Load a sample roster with aliases</li><li>Swim lists for events and focus areas</li></ul></div>
+    <div><h3>Days 3–5 · Voice to row</h3><ul><li>Apps Script upload endpoint</li><li>Gemini parsing with the roster prompt</li><li>Split by athlete, flag unsure names</li><li>Test on 20 recorded sample clips</li></ul></div>
+    <div><h3>Days 6–8 · Coach screens</h3><ul><li>C1 capture with offline queue</li><li>C2 review, C3 inbox and coverage</li><li>Watch / Shortcut capture</li></ul></div>
+    <div><h3>Days 9–11 · Weekly check-in</h3><ul><li>Draft generation from all three sources</li><li>C4 review and Approve & Send All</li><li>Gmail delivery and write-back</li></ul></div>
+    <div><h3>Days 12–14 · Athlete screens</h3><ul><li>A1 check-ins and replies</li><li>A2 journal, A3 progress</li><li>Sign-in by email, own rows only</li></ul></div>
+  </div>
+  <p class="muted">The spec puts athlete screens in Phase 3. Since they use the same app and the same backend, I'd build them now but keep them turned off for the Phase 2 deck tests.</p>
+</section>
+
+</div>
+
+<script>
+(function () {
+  var tabs = document.querySelectorAll('.tabs button');
+  var rows = document.querySelectorAll('.screen-row');
+  function show(f) {
+    tabs.forEach(function (t) { t.setAttribute('aria-selected', t.dataset.f === f ? 'true' : 'false'); });
+    rows.forEach(function (r) { r.hidden = !(f === 'all' || r.dataset.role === f); });
+    try { localStorage.setItem('mprove-filter', f); } catch (e) {}
+  }
+  tabs.forEach(function (t) { t.addEventListener('click', function () { show(t.dataset.f); }); });
+  var saved = null;
+  try { saved = localStorage.getItem('mprove-filter'); } catch (e) {}
+  if (saved) show(saved);
+})();
+</script>
