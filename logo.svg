@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="mp-bg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#132c3b"/>
+      <stop offset="100%" stop-color="#08141c"/>
+    </linearGradient>
+    <linearGradient id="mp-mic" x1="20" y1="12" x2="42" y2="38" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#3fc1cc"/>
+      <stop offset="70%" stop-color="#28b5b5"/>
+      <stop offset="100%" stop-color="#a8d86b"/>
+    </linearGradient>
+    <linearGradient id="mp-wave" x1="12" y1="44" x2="48" y2="54" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#199fb1"/>
+      <stop offset="60%" stop-color="#3fc1cc"/>
+      <stop offset="100%" stop-color="#22a6b3"/>
+    </linearGradient>
+    <linearGradient id="mp-gold" x1="40" y1="20" x2="36" y2="42" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffd54f"/>
+      <stop offset="100%" stop-color="#e0a400"/>
+    </linearGradient>
+  </defs>
+  <!-- Squircle Badge -->
+  <rect width="64" height="64" rx="15" fill="url(#mp-bg)"/>
+  <rect x="1.25" y="1.25" width="61.5" height="61.5" rx="13.75" stroke="#3fc1cc" stroke-opacity="0.22" stroke-width="1.5"/>
+
+  <!-- Gold Athletic Swoosh / Crest on Right -->
+  <path d="M41.5 20.5C47.5 23.5 50 31.5 45.5 37.5C42 42 36 43 33.5 41.5C38.5 40 43 35.5 43.2 29.5C43.3 25.8 42.5 22.8 41.5 20.5Z" fill="url(#mp-gold)"/>
+
+  <!-- Microphone Capsule Outline + Side Grille Slots -->
+  <rect x="24" y="12" width="14" height="21" rx="7" stroke="url(#mp-mic)" stroke-width="3"/>
+  <path d="M24.5 18.5H27.5M24.5 22.5H27.5M24.5 26.5H27.5M34.5 18.5H37.5M34.5 22.5H37.5M34.5 26.5H37.5" stroke="url(#mp-mic)" stroke-width="2.4" stroke-linecap="round"/>
+
+  <!-- Microphone U-Cradle & Stem -->
+  <path d="M19.5 24.5C19.5 31.1 24.9 36.5 31 36.5C37.1 36.5 42.5 31.1 42.5 24.5" stroke="url(#mp-mic)" stroke-width="3" stroke-linecap="round"/>
+  <line x1="31" y1="36.5" x2="31" y2="42.5" stroke="url(#mp-mic)" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- Hydrodynamic Swimming Waves -->
+  <path d="M14 43.5C19.5 40 25.5 42 31 45C36.5 48 43 47 48.5 42" stroke="url(#mp-wave)" stroke-width="3.4" stroke-linecap="round"/>
+  <path d="M16.5 49C21.5 46.5 26.5 48.5 31.5 51C36.5 53.5 41.5 52.5 45.5 49" stroke="url(#mp-wave)" stroke-width="2.8" stroke-linecap="round" opacity="0.85"/>
+</svg>
