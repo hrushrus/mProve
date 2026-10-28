@@ -3,9 +3,9 @@
   g.__stackedFixture = [
     ['TAB_NAME', 'ID_OR_KEY', 'COL_3', 'COL_4', 'COL_5', 'COL_6', 'COL_7', 'COL_8', 'COL_9', 'COL_10', 'COL_11', 'COL_12', ''],
     ['#ERROR!', 'Athlete_ID', 'First_Name', 'Last_Name', 'Phonetic_Aliases', 'Squad_Group', 'Sport_Discipline', 'Primary_Events_Positions', 'Athlete_Email', 'Parent_Email', '', '', ''],
-    ['Roster_Config', 'ATH-001', 'Chris', 'Rus', 'Chris, Christopher, Kris', 'Senior Performance', 'Swimming', '100 Fly, 200 Fly, 200 Free', 'chris@example.com', 'parent.rus@example.com', '', '', ''],
-    ['Roster_Config', 'ATH-002', 'Drew', 'Currah', 'Drew, Dru, Andrew', 'Senior Performance', 'Swimming', '100 Free, 200 IM, 100 Back', 'drew.currah@example.com', 'parent.currah@example.com', '', '', ''],
-    ['Roster_Config', 'ATH-003', 'Alex', 'Chen', 'Alex, Alec', 'Senior Performance', 'Swimming', '100 Breast, 200 Breast, 200 IM', 'alex.chen@example.com', 'parent.chen@example.com', '', '', ''],
+    ['Roster_Config', 'ATH-001', 'Chris', 'Rus', 'Chris, Christopher, Kris', 'National Development', 'Swimming', '100 Fly, 200 Fly, 200 Free', 'chris@example.com', 'parent.rus@example.com', '', '', ''],
+    ['Roster_Config', 'ATH-002', 'Drew', 'Currah', 'Drew, Dru, Andrew', 'National Development', 'Swimming', '100 Free, 200 IM, 100 Back', 'drew.currah@example.com', 'parent.currah@example.com', '', '', ''],
+    ['Roster_Config', 'ATH-003', 'Sophie', 'Rus', 'Sophie, Soph', 'National Development', 'Swimming', '100 Breast, 200 Breast, 200 IM', 'sophie.rus@example.com', 'parent.rus@example.com', '', '', ''],
     ['', '', '', '', '', '', '', '', '', '', '', '', ''],
     ['#ERROR!', 'Obs_ID', 'Timestamp', 'Coach_ID', 'Athlete_ID', 'Athlete_Name', 'Event_Stroke', 'Focus_Area', 'Observation_Type', 'Cleaned_Note', 'Raw_Transcript', 'Week_Start_Date', ''],
     ['Coach_Feedback_Log', 'OBS-101', '2026-10-20 17:14', 'COACH-01', 'ATH-001', 'Chris Rus', 'Butterfly', 'Underwaters & Finish', 'Strength + Correction', 'Hit 6 dolphin kicks off every wall; lifted head breathing into final 10m.', 'Chris 100 fly hit six kicks off every wall but lifted head breathing into the last ten meters.', '2026-10-19', ''],

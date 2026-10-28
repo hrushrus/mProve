@@ -366,11 +366,12 @@ setInterval(flushAll, 30000);
 /* ---------- coach: On deck ---------- */
 function defaultSession() {
   var d = new Date(), part = d.getHours() < 12 ? 'AM' : 'PM';
-  return (S.squads[0] || 'Practice') + ' · ' + dayName(d) + ' ' + part;
+  return (S.squads[0] || 'National Development') + ' · ' + dayName(d) + ' ' + part;
 }
 function viewDeck() {
-  var session = store.get('mprove-session') || defaultSession();
+  var session = (store.get('mprove-session') || defaultSession()).replace('Senior Performance', 'National Development');
   if (session.indexOf(dayName(new Date())) === -1) session = defaultSession();
+  store.set('mprove-session', session);
   setHeader('On deck', session);
   $('#view').innerHTML =
     '<div class="card"><div class="row"><span class="label">Coverage this week</span><span id="cov-pill" class="pill plain">…</span></div><div id="coverage" class="coverage"></div></div>' +

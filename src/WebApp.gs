@@ -76,6 +76,11 @@ function person_(code) {
     var coach = rows.filter(function (r) { return r.Role === 'Coach' && r.Active !== 'no'; })[0];
     if (coach) return coach;
   }
+  // Auto-migrate legacy group name or swimmer names in live sheet
+  if (rows.some(function (r) { return r.Squad_Group === 'Senior Performance' || (r.First_Name === 'Alex' && r.Last_Name === 'Chen'); })) {
+    fillRosterDefaults_();
+    rows = readTable_('Roster_Config');
+  }
   if (code.length < 12) throw new Error('Sign-in link is missing or incomplete. Ask your coach for your mProve link.');
   var me = rows.filter(function (r) {
     return String(r.Access_Code || '').trim().toLowerCase() === code.toLowerCase() && r.Active !== 'no';

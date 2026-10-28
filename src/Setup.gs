@@ -178,6 +178,14 @@ function fillRosterDefaults_() {
     if (!r.Role) patch.Role = /^COACH-/.test(r.Athlete_ID) ? 'Coach' : 'Athlete';
     if (!r.Active) patch.Active = 'yes';
     if (!r.Access_Code) patch.Access_Code = newAccessCode_();
+    if (r.Squad_Group === 'Senior Performance') patch.Squad_Group = 'National Development';
+    if (r.First_Name === 'Alex' && r.Last_Name === 'Chen') {
+      patch.First_Name = 'Sophie';
+      patch.Last_Name = 'Rus';
+      patch.Phonetic_Aliases = 'Sophie, Soph';
+      if (r.Athlete_Email === 'alex.chen@example.com' || !r.Athlete_Email) patch.Athlete_Email = 'sophie.rus@example.com';
+      if (r.Parent_Email === 'parent.chen@example.com' || !r.Parent_Email) patch.Parent_Email = 'parent.rus@example.com';
+    }
     if (Object.keys(patch).length) updateRow_('Roster_Config', r._row, patch);
   });
   var hasCoach = readTable_('Roster_Config').some(function (r) { return r.Role === 'Coach'; });
@@ -185,7 +193,7 @@ function fillRosterDefaults_() {
     var coachIds = readTable_('Coach_Feedback_Log').map(function (r) { return r.Coach_ID; }).filter(String);
     appendRows_('Roster_Config', [{
       Athlete_ID: coachIds[0] || 'COACH-01', First_Name: 'Head', Last_Name: 'Coach',
-      Squad_Group: 'Senior Performance', Sport_Discipline: 'Swimming',
+      Squad_Group: 'National Development', Sport_Discipline: 'Swimming',
       Athlete_Email: Session.getEffectiveUser().getEmail(),
       Role: 'Coach', Active: 'yes', Access_Code: newAccessCode_()
     }]);
@@ -197,6 +205,7 @@ function fillRosterDefaults_() {
 function fillFeedbackDefaults_() {
   readTable_('Coach_Feedback_Log').forEach(function (r) {
     var patch = {};
+    if (r.Athlete_Name === 'Alex Chen') patch.Athlete_Name = 'Sophie Rus';
     if (!r.Review_Status) patch.Review_Status = 'Confirmed';
     if (!r.Week_Start_Date && r.Timestamp) patch.Week_Start_Date = weekStartOf_(r.Timestamp);
     if (Object.keys(patch).length) updateRow_('Coach_Feedback_Log', r._row, patch);

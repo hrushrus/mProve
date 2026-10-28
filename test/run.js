@@ -76,13 +76,13 @@ ok('sign-in rejects bad codes and athletes calling coach functions', () => {
   assert.strictEqual(badRpc.ok, false);
 });
 ok('a clip naming three athletes becomes three rows; an unsure name waits for review', () => {
-  g.__nextGemini = { transcript: 'Chris had strong turns; Dru dropped his elbow on the turn; Alex had great momentum',
+  g.__nextGemini = { transcript: 'Chris had strong turns; Dru dropped his elbow on the turn; Sophie had great momentum',
     observations: [
       { athlete_id: 'ATH-001', heard_as: 'Chris', match_confidence: 0.97, event_stroke: 'Freestyle', focus_area: 'Turns & Breakout', observation_type: 'Strength', cleaned_note: 'Strong turns.', raw_segment: 'Chris had strong turns' },
       { athlete_id: 'ATH-002', heard_as: 'Dru', match_confidence: 0.7, event_stroke: 'Freestyle', focus_area: 'Turns & Breakout', observation_type: 'Correction', cleaned_note: 'Dropped elbow on the turn.', raw_segment: 'Dru dropped his elbow on the turn' },
       { athlete_id: 'ATH-999', heard_as: 'Sam', match_confidence: 0.9, event_stroke: '', focus_area: '', observation_type: 'Strength', cleaned_note: 'Great momentum.', raw_segment: 'Sam had great momentum' }
     ] };
-  const res = g.coach_uploadNote(COACH, { audio: 'AAAA', mime: 'audio/wav', session: 'Senior · Sat PM', recordedAt: new Date(2026, 9, 24, 17, 30).getTime(), clipId: 'CLIP-T1' });
+  const res = g.coach_uploadNote(COACH, { audio: 'AAAA', mime: 'audio/wav', session: 'National Development · Sat PM', recordedAt: new Date(2026, 9, 24, 17, 30).getTime(), clipId: 'CLIP-T1' });
   assert.strictEqual(res.length, 3);
   deq(res.map(r => r.obsId), ['OBS-117', 'OBS-118', 'OBS-119']);
   deq(res.map(r => r.status), ['Auto', 'Needs_Review', 'Needs_Review']);
@@ -112,7 +112,7 @@ ok('review: confirm a note with the right athlete, delete the failed one', () =>
   const log = g.readTable_('Coach_Feedback_Log');
   const o118 = log.find(r => r.Obs_ID === 'OBS-118');
   assert.strictEqual(o118.Review_Status, 'Confirmed'); assert.strictEqual(o118.Cleaned_Note, 'Dropped right elbow on the turn.');
-  assert.strictEqual(log.find(r => r.Obs_ID === 'OBS-119').Athlete_Name, 'Alex Chen');
+  assert.strictEqual(log.find(r => r.Obs_ID === 'OBS-119').Athlete_Name, 'Sophie Rus');
   assert.strictEqual(log.find(r => r.Obs_ID === 'OBS-120').Review_Status, 'Deleted');
 });
 ok('athlete asks about a note; coach inbox shows it unread; coach replies', () => {
@@ -151,7 +151,7 @@ ok('weekly drafts: enough data gets a draft, too little is skipped, private jour
   g.__gemini.length = 0;
   g.__nextGemini = { subject: 'Weekly mProve Check-In: Chris — Fly finishes', wins: 'Six kicks off every wall.', focus: 'Eyes down into the wall.', coach_note: 'Reply here!' };
   const r = g.coach_generate(COACH, '2026-10-19');
-  deq([r.drafted, r.skipped, r.unchanged], [2, 1, 0]); // Chris, Drew drafted; Alex has one note
+  deq([r.drafted, r.skipped, r.unchanged], [2, 1, 0]); // Chris, Drew drafted; Sophie has one note
   const prompt = g.__gemini.find(b => /ATHLETE: Chris Rus/.test(b.contents[0].parts[0].text)).contents[0].parts[0].text;
   assert.match(prompt, /OBS-101/); assert.match(prompt, /THR-042/); assert.match(prompt, /JRN-310/);
   assert.doesNotMatch(prompt, /private thought/);

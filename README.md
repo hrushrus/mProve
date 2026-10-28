@@ -67,7 +67,7 @@ The deployment URL also accepts uploads directly. Build a Shortcut with these ac
 
 ```json
 { "k": "<coach access code>", "audio": "<Base64 Encoded>", "mime": "audio/mp4",
-  "session": "Senior Performance · PM", "clipId": "<Current Date, formatted as a number>" }
+  "session": "National Development · PM", "clipId": "<Current Date, formatted as a number>" }
 ```
 
 Assign the Shortcut to the Watch or iPhone Action Button. Gemini's support for iPhone `.m4a` audio hasn't been tested yet. If clips come back flagged "Could not process", use the in-app recorder, which sends WAV.
