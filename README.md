@@ -19,20 +19,30 @@ Design page: https://claude.ai/artifact/GAfuGdXnN2ZwPAsLF5NJEA
 | `Index.html` | The app itself |
 | `appsscript.json` | Time zone (Toronto), permissions, web app settings |
 
-## Setup (about 20 minutes)
+## Setup
 
 1. **Back up the sheet.** In *mProve Master Database V2*, use File › Make a copy. Setup keeps your original data in a tab named `Archive_V2`, but a copy is cheap insurance.
-2. **Add the code.** In the sheet, open Extensions › Apps Script.
-   - Delete the empty `Code.gs`.
-   - Create a script file for each `.gs` file above (name it without `.gs`) and paste its contents. Create an HTML file named `Index` and paste `Index.html`.
-   - In Project Settings (gear icon), tick **Show "appsscript.json" manifest file**, then replace its contents with `appsscript.json`.
-3. **Add the Gemini key.** Get a key at https://aistudio.google.com/apikey. In Project Settings › Script properties, add `GEMINI_API_KEY` with the key. The default model is `gemini-2.5-flash`. To use a different one, add `GEMINI_MODEL`.
-4. **Split the sheet.** Reload the spreadsheet. A **mProve** menu appears. Choose mProve › Set up workbook and approve the permissions. Setup will:
+2. **Add the code to the sheet.**
+   - **Option A — Automated via CLI (`clasp`):**
+     1. Enable the Google Apps Script API at https://script.google.com/home/usersettings.
+     2. From this repo directory, run:
+        ```bash
+        npm install
+        npm run clasp:setup
+        ```
+        *(If the sheet already has an Apps Script project attached, copy its Script ID from Extensions › Apps Script › Project Settings and run `npm run clasp:setup -- <SCRIPT_ID>` instead.)*
+     3. Whenever you edit files locally, push updates with `npm run push`.
+   - **Option B — Manual copy-paste:**
+     1. In the sheet, open Extensions › Apps Script and delete the empty `Code.gs`.
+     2. Create a script file for each `.gs` file above (name it without `.gs`) and paste its contents. Create an HTML file named `Index` and paste `Index.html`.
+     3. In Project Settings (gear icon), tick **Show "appsscript.json" manifest file**, then replace its contents with `appsscript.json`.
+3. **Split the sheet.** Reload the spreadsheet. A **mProve** menu appears. Choose **mProve › Set up workbook** and approve the permissions. Setup will:
    - create the five tabs with your existing column names plus the added ones, and copy every row into them
    - rename the original sheet to `Archive_V2`
    - split journal values like "28.4s Avg / 0 Breaths Inside Flags" into one number per row
    - add a coach row (`COACH-01`) to `Roster_Config` with your email, and give everyone a private access code
    - create a Drive folder called *mProve audio clips*
+4. **Add the Gemini key.** Get a key at https://aistudio.google.com/apikey. In the spreadsheet menu, choose **mProve › Set Gemini API key** and paste it (or add `GEMINI_API_KEY` in Apps Script › Project Settings › Script properties). The default model is `gemini-2.5-flash`; to override it, add a `GEMINI_MODEL` script property.
 5. **Fix the coach row.** In `Roster_Config`, change the `COACH-01` row's name and email to the real coach's.
 6. **Deploy the web app.** In Apps Script, choose Deploy › New deployment › Web app. Set **Execute as: Me** and **Who has access: Anyone**, then deploy. "Anyone" lets athletes without a Google account open it. Each person's private link is what signs them in.
 7. **Share the links.** In the sheet, choose mProve › Show app links. Send each person only their own link. On a phone, open the link and use Share › Add to Home Screen so it opens like an app.

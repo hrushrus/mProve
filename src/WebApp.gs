@@ -15,26 +15,65 @@ function doGet(e) {
     .addMetaTag('viewport', 'width=device-width, initial-scale=1, viewport-fit=cover');
 }
 
+function rpcMap_() {
+  return {
+    api_bootstrap: api_bootstrap,
+    coach_overview: coach_overview,
+    coach_uploadNote: coach_uploadNote,
+    coach_confirmObs: coach_confirmObs,
+    coach_deleteObs: coach_deleteObs,
+    coach_reply: coach_reply,
+    coach_markAtPractice: coach_markAtPractice,
+    coach_weekly: coach_weekly,
+    coach_generate: coach_generate,
+    coach_saveDigest: coach_saveDigest,
+    coach_approve: coach_approve,
+    coach_approveAndSendAll: coach_approveAndSendAll,
+    athlete_home: athlete_home,
+    athlete_post: athlete_post,
+    athlete_saveJournal: athlete_saveJournal,
+    athlete_journal: athlete_journal
+  };
+}
+
 /**
- * Upload endpoint for an iOS Shortcut or Watch action:
- * POST JSON { k, audio (base64), mime, session, recordedAt (ms), clipId }.
+ * Handles both:
+ * 1. Top-level web app RPC calls: POST JSON { fn, args }
+ * 2. iOS Shortcut / Watch uploads: POST JSON { k, audio (base64), mime, session, recordedAt (ms), clipId }
  */
 function doPost(e) {
   var out;
   try {
     var p = JSON.parse(e.postData.contents);
-    out = { ok: true, result: coach_uploadNote(p.k, p) };
+    if (p && p.fn) {
+      var fn = rpcMap_()[p.fn];
+      if (!fn) throw new Error('Unknown function: ' + p.fn);
+      out = { ok: true, result: fn.apply(null, p.args || []) };
+    } else {
+      out = { ok: true, result: coach_uploadNote(p.k, p) };
+    }
   } catch (err) {
     out = { ok: false, error: String(err.message || err) };
   }
   return ContentService.createTextOutput(JSON.stringify(out)).setMimeType(ContentService.MimeType.JSON);
 }
 
+function cleanCode_(raw) {
+  var s = String(raw || '').trim().replace(/^['"]+|['"]+$/g, '').trim();
+  var m = s.match(/[?&]k=([a-zA-Z0-9_-]+)/);
+  return m ? m[1] : s;
+}
+
 function person_(code) {
-  code = String(code || '').trim();
+  code = cleanCode_(code);
   if (code.length < 12) throw new Error('Sign-in link is missing or incomplete. Ask your coach for your mProve link.');
-  var me = readTable_('Roster_Config').filter(function (r) {
-    return r.Access_Code === code && r.Active !== 'no';
+  var rows = readTable_('Roster_Config');
+  if (!rows.some(function (r) { return r.Access_Code; })) {
+    fillRosterDefaults_();
+    rows = readTable_('Roster_Config');
+  }
+  var me = rows.filter(function (r) {
+    return String(r.Access_Code || '').trim().toLowerCase() === code.toLowerCase() && r.Active !== 'no';
   })[0];
   if (!me) throw new Error('This sign-in link is not valid any more. Ask your coach for a new one.');
   return me;

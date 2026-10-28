@@ -1,0 +1,22 @@
+{
+  "name": "mprove",
+  "version": "0.1.0",
+  "private": true,
+  "description": "mProve Phase 1 prototype (Google Sheets + Apps Script + Gemini)",
+  "scripts": {
+    "start": "node scripts/serve.js",
+    "build": "node scripts/serve.js --build-only",
+    "test": "node test/run.js",
+    "preview": "node test/preview.js",
+    "clasp:login": "clasp login",
+    "clasp:setup": "node scripts/clasp-setup.js",
+    "push": "node scripts/serve.js --build-only && clasp push --force",
+    "deploy": "node scripts/serve.js --build-only && clasp push --force && clasp deploy --deploymentId AKfycbyPur-Yfc2wbmKsNFNmCMS7iobzC1OMjRsew7RZOc-jQkCFIvzp-cuaZZ8b0fuTkX6GDw -d 'mProve app'",
+    "pull": "clasp pull",
+    "open": "clasp open-script",
+    "sheet": "open 'https://docs.google.com/spreadsheets/d/13mKskuiQt7ecyckl8ESJmPx3zpzPsqSzHjn9J4nAJ4s/edit'"
+  },
+  "devDependencies": {
+    "@google/clasp": "^2.5.0"
+  }
+}

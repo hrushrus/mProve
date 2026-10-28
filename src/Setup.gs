@@ -6,6 +6,7 @@
 function onOpen() {
   SpreadsheetApp.getUi().createMenu('mProve')
     .addItem('Set up workbook', 'setupWorkbook')
+    .addItem('Set Gemini API key', 'promptGeminiKey')
     .addItem('Show app links', 'showAppLinks')
     .addSeparator()
     .addItem('Generate weekly drafts (this week)', 'menuGenerateThisWeek')
@@ -13,6 +14,26 @@ function onOpen() {
     .addSeparator()
     .addItem('Install schedules (Sunday drafts, audio cleanup)', 'installTriggers')
     .addToUi();
+}
+
+function promptGeminiKey() {
+  requireSheetUi_();
+  var ui = SpreadsheetApp.getUi();
+  var current = prop_('GEMINI_API_KEY', '');
+  var status = current ? 'A key is currently saved (ends in …' + current.slice(-4) + ').' : 'No key is saved yet.';
+  var res = ui.prompt(
+    'mProve — Gemini API key',
+    status + '\nPaste your Gemini API key from https://aistudio.google.com/apikey:',
+    ui.ButtonSet.OK_CANCEL
+  );
+  if (res.getSelectedButton() !== ui.Button.OK) return;
+  var key = String(res.getResponseText() || '').trim();
+  if (!key) {
+    ui.alert('No key entered; keeping existing setting.');
+    return;
+  }
+  PropertiesService.getScriptProperties().setProperty('GEMINI_API_KEY', key);
+  ui.alert('Gemini API key saved.');
 }
 
 function setupWorkbook() {
@@ -210,6 +231,7 @@ function ensureAudioFolder_() {
 /** Lists each person's personal app link so the coach can share them one by one. */
 function showAppLinks() {
   requireSheetUi_();
+  fillRosterDefaults_();
   var url = ScriptApp.getService().getUrl();
   var ui = SpreadsheetApp.getUi();
   if (!url) {
@@ -217,14 +239,16 @@ function showAppLinks() {
     return;
   }
   var rows = readTable_('Roster_Config').filter(function (r) { return r.Active !== 'no'; });
-  var html = '<style>body{font:13px system-ui;margin:12px}td{padding:4px 8px;vertical-align:top}input{width:100%}</style>' +
-    '<p>Each link signs that person in. Share it only with them.</p><table>' +
+  var html = '<style>body{font:13px system-ui;margin:12px}td{padding:4px 8px;vertical-align:top}input{width:100%;font-family:monospace}</style>' +
+    '<p>Each link (or 16-character code) signs that person in. Share it only with them.</p><table>' +
+    '<tr><th align="left">Person</th><th align="left">Access Code</th><th align="left">Direct Link</th></tr>' +
     rows.map(function (r) {
       var link = url + '?k=' + r.Access_Code;
       return '<tr><td><b>' + esc_(r.First_Name + ' ' + r.Last_Name) + '</b><br>' + esc_(r.Role) +
+        '</td><td><input readonly onclick="this.select()" value="' + esc_(r.Access_Code) + '">' +
         '</td><td><input readonly onclick="this.select()" value="' + esc_(link) + '"></td></tr>';
     }).join('') + '</table>';
-  ui.showModalDialog(HtmlService.createHtmlOutput(html).setWidth(640).setHeight(420), 'mProve app links');
+  ui.showModalDialog(HtmlService.createHtmlOutput(html).setWidth(680).setHeight(420), 'mProve app links');
 }
 
 function esc_(s) {

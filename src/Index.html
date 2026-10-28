@@ -113,22 +113,44 @@ svg text { font-family: var(--mono); }
 
 <script>
 var SERVER_CODE = <?= accessCode ?>;
+var DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycbyPur-Yfc2wbmKsNFNmCMS7iobzC1OMjRsew7RZOc-jQkCFIvzp-cuaZZ8b0fuTkX6GDw/exec';
 
 /* ---------- basics ---------- */
 var store = {
   get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
   set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
 };
-var CODE = SERVER_CODE || store.get('mprove-k') || '';
+function cleanCode(raw) {
+  var s = String(raw || '').trim().replace(/^['"]+|['"]+$/g, '').trim();
+  var u = s.match(/^(https:\/\/script\.google\.com\/macros\/s\/[^?#]+\/exec)/i);
+  if (u) store.set('mprove-api', u[1]);
+  var m = s.match(/[?&]k=([a-zA-Z0-9_-]+)/);
+  return m ? m[1] : s;
+}
+var URL_PARAMS = (function () { try { return new URLSearchParams(location.search); } catch (e) { return null; } })();
+if (URL_PARAMS && URL_PARAMS.get('api')) store.set('mprove-api', URL_PARAMS.get('api'));
+SERVER_CODE = cleanCode(SERVER_CODE) || cleanCode(URL_PARAMS && URL_PARAMS.get('k'));
+var CODE = SERVER_CODE || cleanCode(store.get('mprove-k')) || '';
 if (SERVER_CODE) store.set('mprove-k', SERVER_CODE);
 
 function api(fn) {
-  var args = Array.prototype.slice.call(arguments, 1);
-  return new Promise(function (resolve, reject) {
-    var r = google.script.run.withSuccessHandler(resolve).withFailureHandler(function (e) {
-      reject(e && e.message ? e : new Error(String(e)));
+  var args = [CODE].concat(Array.prototype.slice.call(arguments, 1));
+  if (window.google && google.script && google.script.run) {
+    return new Promise(function (resolve, reject) {
+      var r = google.script.run.withSuccessHandler(resolve).withFailureHandler(function (e) {
+        reject(e && e.message ? e : new Error(String(e)));
+      });
+      r[fn].apply(r, args);
     });
-    r[fn].apply(r, [CODE].concat(args));
+  }
+  var endpoint = store.get('mprove-api') || DEFAULT_API_URL;
+  return fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ fn: fn, args: args })
+  }).then(function (res) { return res.json(); }).then(function (data) {
+    if (!data || !data.ok) throw new Error((data && data.error) || 'Request failed');
+    return data.result;
   });
 }
 function esc(s) {
@@ -279,14 +301,14 @@ function boot() {
     if (S.me.role === 'Coach') refreshOverview().catch(function () {});
     go(valid.indexOf(saved) !== -1 ? saved : valid[0]);
     flushAll();
-  }).catch(function (e) { signin(e.message); });
+  }).catch(function (e) { store.set('mprove-k', ''); signin(e.message); });
 }
 function signin(msg) {
   setHeader('mProve');
   $('#view').innerHTML = '<div class="signin"><b>Sign in to mProve</b><p class="small">' + esc(msg) + '</p>' +
-    '<input type="text" id="code-in" placeholder="Paste your access code" autocomplete="off">' +
+    '<input type="text" id="code-in" placeholder="Paste your access code or link" autocomplete="off">' +
     '<button class="btn primary" id="code-go">Sign in</button></div>';
-  $('#code-go').onclick = function () { CODE = $('#code-in').value.trim(); store.set('mprove-k', CODE); boot(); };
+  $('#code-go').onclick = function () { CODE = cleanCode($('#code-in').value); store.set('mprove-k', CODE); boot(); };
 }
 function refreshOverview() {
   return api('coach_overview').then(function (o) { S.overview = o; renderTabs(); return o; });

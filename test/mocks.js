@@ -35,7 +35,21 @@
   g.__mail = []; g.__gemini = []; g.__props = { GEMINI_API_KEY: 'test-key' };
   g.SpreadsheetApp = {
     getActiveSpreadsheet: function () { return ss; },
-    getUi: function () { if (g.__noUi) throw new Error('Cannot call SpreadsheetApp.getUi() from this context.'); return { alert: function () {}, ButtonSet: { OK: 1 }, showModalDialog: function () {} }; },
+    getUi: function () {
+      if (g.__noUi) throw new Error('Cannot call SpreadsheetApp.getUi() from this context.');
+      return {
+        alert: function () {},
+        prompt: function () {
+          return {
+            getSelectedButton: function () { return g.__promptCancel ? 0 : 1; },
+            getResponseText: function () { return g.__promptText || ''; }
+          };
+        },
+        ButtonSet: { OK: 1, OK_CANCEL: 2 },
+        Button: { OK: 1, CANCEL: 0 },
+        showModalDialog: function () {}
+      };
+    },
     newDataValidation: function () { var b = { requireValueInList: function () { return b; }, setAllowInvalid: function () { return b; }, build: function () { return {}; } }; return b; }
   };
   g.PropertiesService = { getScriptProperties: function () { return { getProperty: function (k) { return k in g.__props ? g.__props[k] : null; }, setProperty: function (k, v) { g.__props[k] = v; } }; } };
@@ -56,6 +70,12 @@
     getFolderById: function () { return { createFile: function () { return { getUrl: function () { return 'https://drive.google.com/file/d/CLIP/view'; } }; }, getFiles: function () { return { hasNext: function () { return false; } }; } }; }
   };
   g.ScriptApp = { getService: function () { return { getUrl: function () { return 'https://script.google.com/macros/s/TEST/exec'; } }; } };
+  g.ContentService = {
+    MimeType: { JSON: 'application/json' },
+    createTextOutput: function (s) {
+      return { setMimeType: function () { return { getContent: function () { return s; } }; } };
+    }
+  };
   g.MailApp = { sendEmail: function (o) { g.__mail.push(o); } };
   // Gemini stub: g.__nextGemini is the JSON object the model "returns".
   g.UrlFetchApp = {

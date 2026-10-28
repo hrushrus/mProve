@@ -42,6 +42,9 @@ ok('running setup twice does not duplicate rows', () => {
   g.setupWorkbook();
   assert.strictEqual(g.readTable_('Coach_Feedback_Log').length, 4);
   assert.strictEqual(g.readTable_('Roster_Config').length, 4);
+  g.__promptText = 'new-gemini-key';
+  g.promptGeminiKey();
+  assert.strictEqual(g.__props.GEMINI_API_KEY, 'new-gemini-key');
 });
 
 const roster = g.readTable_('Roster_Config');
@@ -51,6 +54,7 @@ g.__noUi = true;
 
 ok('menu functions refuse to run from the web app', () => {
   assert.throws(() => g.setupWorkbook(), /getUi/);
+  assert.throws(() => g.promptGeminiKey(), /getUi/);
   assert.throws(() => g.cleanupOldAudio(), /schedule/);
 });
 ok('sign-in rejects bad codes and athletes calling coach functions', () => {
@@ -59,7 +63,13 @@ ok('sign-in rejects bad codes and athletes calling coach functions', () => {
   assert.throws(() => g.coach_overview(CHRIS), /Only coaches/);
   const b = g.api_bootstrap(COACH);
   assert.strictEqual(b.roster.length, 3);
+  assert.strictEqual(g.api_bootstrap('https://script.google.com/macros/s/TEST/exec?k=' + COACH).roster.length, 3);
   assert.strictEqual(g.api_bootstrap(CHRIS).roster.length, 1);
+  const rpcRes = JSON.parse(g.doPost({ postData: { contents: JSON.stringify({ fn: 'api_bootstrap', args: [COACH] }) } }).getContent());
+  assert.strictEqual(rpcRes.ok, true);
+  assert.strictEqual(rpcRes.result.roster.length, 3);
+  const badRpc = JSON.parse(g.doPost({ postData: { contents: JSON.stringify({ fn: 'setupWorkbook', args: [] }) } }).getContent());
+  assert.strictEqual(badRpc.ok, false);
 });
 ok('a clip naming three athletes becomes three rows; an unsure name waits for review', () => {
   g.__nextGemini = { transcript: 'Chris had strong turns; Dru dropped his elbow on the turn; Alex had great momentum',

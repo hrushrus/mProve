@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #eef3f4; --surface: #ffffff; --ink: #0f2330; --muted: #536b78; --line: #cfdde2;
+  --water: #0b7f8c; --water-soft: #d6eef0; --flag: #e0a400; --flag-soft: #fbefc8;
+  --good: #1d8a4e; --warn: #b86a00; --bad: #c0392b; --on-water: #ffffff;
+  --display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --body: "Figtree", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0b161d; --surface: #12222c; --ink: #e4eef1; --muted: #93abb6; --line: #24404d;
+    --water: #3fc1cc; --water-soft: #12363d; --flag: #f2c230; --flag-soft: #3a3115;
+    --good: #4fc884; --warn: #f0a93b; --bad: #ff7a6b; --on-water: #062026;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 var(--body); -webkit-text-size-adjust: 100%; }
+button, input, select, textarea { font: inherit; color: inherit; }
+.app { max-width: 560px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column;
+  padding: env(safe-area-inset-top, 0px) max(14px, env(safe-area-inset-right, 0px)) calc(78px + env(safe-area-inset-bottom, 0px)) max(14px, env(safe-area-inset-left, 0px)); }
+header.bar { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 14px 2px 10px; }
+header.bar h1 { font: 700 1.7rem/1 var(--display); margin: 0; letter-spacing: .01em; }
+.pill { font: 500 11px var(--mono); padding: 3px 9px; border-radius: 999px; background: var(--water-soft); color: var(--water); white-space: nowrap; }
+.pill.warn { background: var(--flag-soft); color: var(--warn); }
+.pill.bad { background: color-mix(in srgb, var(--bad) 15%, transparent); color: var(--bad); }
+.pill.good { background: color-mix(in srgb, var(--good) 15%, transparent); color: var(--good); }
+.pill.plain { background: transparent; border: 1px solid var(--line); color: var(--muted); }
+main { display: flex; flex-direction: column; gap: 12px; flex: 1; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.row { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.row > * { min-width: 0; }
+.small { font-size: 12.5px; color: var(--muted); }
+.label { font: 500 11px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.tags { display: flex; flex-wrap: wrap; gap: 5px; }
+.tag { font: 500 10.5px var(--mono); padding: 2px 7px; border-radius: 6px; background: var(--water-soft); color: var(--water); }
+.note { white-space: pre-wrap; overflow-wrap: anywhere; }
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 11px; padding: 10px 14px; font-weight: 600; cursor: pointer; text-align: center; }
+.btn.primary { background: var(--water); border-color: var(--water); color: var(--on-water); }
+.btn.danger { color: var(--bad); }
+.btn.sm { padding: 6px 11px; font-size: 13px; border-radius: 9px; }
+.btn:disabled { opacity: .5; cursor: default; }
+.btn:focus-visible, .seg button:focus-visible, nav button:focus-visible, .rec:focus-visible { outline: 3px solid var(--flag); outline-offset: 2px; }
+.btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.btns .btn { flex: 1; }
+input[type=text], input[type=number], input[type=date], select, textarea {
+  width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 9px 11px; background: var(--bg); min-width: 0; }
+textarea { min-height: 84px; resize: vertical; }
+input[type=range] { width: 100%; accent-color: var(--water); }
+.seg { display: flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.seg button { flex: 1; border: 0; background: transparent; padding: 8px 6px; cursor: pointer; font-size: 13.5px; }
+.seg button[aria-pressed=true] { background: var(--ink); color: var(--bg); font-weight: 600; }
+nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; background: var(--surface); border-top: 1px solid var(--line);
+  display: flex; justify-content: center; padding: 6px max(8px, env(safe-area-inset-right, 0px)) calc(8px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px)); z-index: 5; }
+nav.tabs .inner { display: flex; width: 100%; max-width: 560px; }
+nav.tabs button { flex: 1; border: 0; background: transparent; padding: 8px 4px; font-size: 13px; color: var(--muted); cursor: pointer; position: relative; }
+nav.tabs button[aria-current=page] { color: var(--water); font-weight: 700; }
+nav.tabs .badge { font: 600 10px var(--mono); background: var(--bad); color: #fff; border-radius: 999px; padding: 1px 6px; margin-left: 4px; }
+
+/* deck */
+.coverage { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; }
+.coverage div { display: grid; gap: 3px; text-align: center; font-size: 11px; color: var(--muted); min-width: 0; }
+.coverage i { display: block; height: 16px; border-radius: 4px; background: var(--water); }
+.coverage i.lo { background: var(--flag); }
+.coverage i.no { background: var(--bad); }
+.coverage span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.recwrap { display: grid; place-items: center; padding: 18px 0 10px; }
+.rec { width: min(72vw, 250px); aspect-ratio: 1; border-radius: 50%; border: 0; background: var(--water); color: var(--on-water);
+  font: 700 2rem/1 var(--display); cursor: pointer; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+  box-shadow: 0 0 0 12px var(--water-soft); }
+.rec small { display: block; font: 500 12px var(--body); margin-top: 8px; opacity: .85; }
+.rec.on { background: var(--bad); box-shadow: 0 0 0 14px color-mix(in srgb, var(--bad) 22%, transparent); }
+@media (prefers-reduced-motion: no-preference) { .rec.on { animation: pulse 1.2s ease-in-out infinite; } }
+@keyframes pulse { 50% { box-shadow: 0 0 0 22px color-mix(in srgb, var(--bad) 12%, transparent); } }
+.status { text-align: center; font: 500 12px var(--mono); color: var(--muted); }
+
+/* threads */
+.bubbles { display: flex; flex-direction: column; gap: 6px; }
+.bubble { padding: 8px 11px; border-radius: 13px; max-width: 88%; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14px; }
+.bubble.me { align-self: flex-end; background: var(--water); color: var(--on-water); border-bottom-right-radius: 4px; }
+.bubble.them { align-self: flex-start; background: var(--bg); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
+.bubble .t { display: block; font: 10px var(--mono); opacity: .75; margin-top: 3px; }
+.quote { border-left: 3px solid var(--flag); padding-left: 9px; font-size: 13px; color: var(--muted); }
+details > summary { cursor: pointer; list-style: none; }
+details > summary::-webkit-details-marker { display: none; }
+
+.empty { text-align: center; color: var(--muted); padding: 26px 10px; }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(84px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg);
+  padding: 9px 16px; border-radius: 999px; font-size: 14px; z-index: 9; max-width: calc(100% - 32px); }
+.err { color: var(--bad); font-size: 13px; }
+.metric { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) auto; gap: 6px; align-items: center; }
+@media (max-width: 420px) { .metric { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .metric input:first-child { grid-column: 1 / -1; } }
+svg text { font-family: var(--mono); }
+.signin { margin: 18vh auto 0; max-width: 360px; text-align: center; display: grid; gap: 12px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="bar"><h1 id="title">mProve</h1><span id="hdr-pill" class="pill" hidden></span></header>
+  <main id="view"><div class="empty">Loading…</div></main>
+</div>
+<nav class="tabs" id="tabs" hidden><div class="inner" id="tabs-inner"></div></nav>
+<div class="toast" id="toast" hidden></div>
+<input type="file" id="file-audio" accept="audio/*" capture hidden>
+
+<script>
+var SERVER_CODE = '';
+var DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycbyPur-Yfc2wbmKsNFNmCMS7iobzC1OMjRsew7RZOc-jQkCFIvzp-cuaZZ8b0fuTkX6GDw/exec';
+
+/* ---------- basics ---------- */
+var store = {
+  get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+};
+function cleanCode(raw) {
+  var s = String(raw || '').trim().replace(/^['"]+|['"]+$/g, '').trim();
+  var u = s.match(/^(https:\/\/script\.google\.com\/macros\/s\/[^?#]+\/exec)/i);
+  if (u) store.set('mprove-api', u[1]);
+  var m = s.match(/[?&]k=([a-zA-Z0-9_-]+)/);
+  return m ? m[1] : s;
+}
+var URL_PARAMS = (function () { try { return new URLSearchParams(location.search); } catch (e) { return null; } })();
+if (URL_PARAMS && URL_PARAMS.get('api')) store.set('mprove-api', URL_PARAMS.get('api'));
+SERVER_CODE = cleanCode(SERVER_CODE) || cleanCode(URL_PARAMS && URL_PARAMS.get('k'));
+var CODE = SERVER_CODE || cleanCode(store.get('mprove-k')) || '';
+if (SERVER_CODE) store.set('mprove-k', SERVER_CODE);
+
+function api(fn) {
+  var args = [CODE].concat(Array.prototype.slice.call(arguments, 1));
+  if (window.google && google.script && google.script.run) {
+    return new Promise(function (resolve, reject) {
+      var r = google.script.run.withSuccessHandler(resolve).withFailureHandler(function (e) {
+        reject(e && e.message ? e : new Error(String(e)));
+      });
+      r[fn].apply(r, args);
+    });
+  }
+  var endpoint = store.get('mprove-api') || DEFAULT_API_URL;
+  return fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ fn: fn, args: args })
+  }).then(function (res) { return res.json(); }).then(function (data) {
+    if (!data || !data.ok) throw new Error((data && data.error) || 'Request failed');
+    return data.result;
+  });
+}
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+function $(sel, root) { return (root || document).querySelector(sel); }
+function $$(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
+var toastTimer;
+function toast(msg) {
+  var t = $('#toast'); t.textContent = msg; t.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.hidden = true; }, 2600);
+}
+function buzz() { try { navigator.vibrate && navigator.vibrate(60); } catch (e) {} }
+function fmtTime(s) { return String(s || '').slice(5, 16).replace('-', '/'); }
+function dayName(d) { return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getDay()]; }
+function todayStr() { var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function addDays(s, n) { var p = s.split('-'); var d = new Date(+p[0], p[1] - 1, +p[2] + n); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function setHeader(title, pill, cls) {
+  $('#title').textContent = title;
+  var p = $('#hdr-pill'); p.hidden = !pill; p.textContent = pill || ''; p.className = 'pill' + (cls ? ' ' + cls : '');
+}
+function showError(e) { toast(e && e.message ? e.message : String(e)); }
+
+/* ---------- offline queue (IndexedDB, falls back to memory) ---------- */
+var Q = (function () {
+  var mem = { clips: {}, journal: {} };
+  var dbp = new Promise(function (resolve) {
+    try {
+      var req = indexedDB.open('mprove', 1);
+      req.onupgradeneeded = function () {
+        req.result.createObjectStore('clips', { keyPath: 'id' });
+        req.result.createObjectStore('journal', { keyPath: 'id' });
+      };
+      req.onsuccess = function () { resolve(req.result); };
+      req.onerror = function () { resolve(null); };
+    } catch (e) { resolve(null); }
+  });
+  function tx(storeName, mode, fn) {
+    return dbp.then(function (db) {
+      if (!db) return fn(null);
+      return new Promise(function (resolve, reject) {
+        var t = db.transaction(storeName, mode); var s = t.objectStore(storeName); var out = fn(s);
+        t.oncomplete = function () { resolve(out && out.result !== undefined ? out.result : out); };
+        t.onerror = function () { reject(t.error); };
+      });
+    });
+  }
+  return {
+    add: function (st, item) { return tx(st, 'readwrite', function (s) { if (!s) { mem[st][item.id] = item; return; } s.put(item); }); },
+    del: function (st, id) { return tx(st, 'readwrite', function (s) { if (!s) { delete mem[st][id]; return; } s.delete(id); }); },
+    all: function (st) {
+      return tx(st, 'readonly', function (s) { if (!s) return Object.keys(mem[st]).map(function (k) { return mem[st][k]; }); return s.getAll(); })
+        .then(function (r) { return (r || []).sort(function (a, b) { return a.at - b.at; }); });
+    }
+  };
+})();
+
+/* ---------- audio: record as 16 kHz mono WAV ---------- */
+var Rec = {
+  active: false,
+  start: function () {
+    var self = this;
+    return navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } })
+      .then(function (stream) {
+        var Ctx = window.AudioContext || window.webkitAudioContext;
+        self.ctx = new Ctx(); self.stream = stream; self.chunks = [];
+        var src = self.ctx.createMediaStreamSource(stream);
+        self.proc = self.ctx.createScriptProcessor(4096, 1, 1);
+        self.proc.onaudioprocess = function (e) { self.chunks.push(new Float32Array(e.inputBuffer.getChannelData(0))); };
+        src.connect(self.proc); self.proc.connect(self.ctx.destination);
+        self.src = src; self.active = true; self.t0 = Date.now();
+      });
+  },
+  stop: function () {
+    var self = this; self.active = false;
+    try { self.src.disconnect(); self.proc.disconnect(); } catch (e) {}
+    self.stream.getTracks().forEach(function (t) { t.stop(); });
+    var rate = self.ctx.sampleRate; self.ctx.close();
+    var n = self.chunks.reduce(function (a, c) { return a + c.length; }, 0);
+    var all = new Float32Array(n), o = 0;
+    self.chunks.forEach(function (c) { all.set(c, o); o += c.length; });
+    return { wav: toWav(all, rate), seconds: n / rate };
+  }
+};
+function downsample(buf, rate, target) {
+  if (rate <= target) return buf;
+  var ratio = rate / target, len = Math.floor(buf.length / ratio), out = new Float32Array(len);
+  for (var i = 0; i < len; i++) {
+    var s = Math.floor(i * ratio), e = Math.min(buf.length, Math.floor((i + 1) * ratio)), sum = 0;
+    for (var j = s; j < e; j++) sum += buf[j];
+    out[i] = sum / Math.max(1, e - s);
+  }
+  return out;
+}
+function toWav(samples, rate) {
+  var data = downsample(samples, rate, 16000), sr = rate > 16000 ? 16000 : rate;
+  var buf = new ArrayBuffer(44 + data.length * 2), v = new DataView(buf);
+  function str(o, s) { for (var i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); }
+  str(0, 'RIFF'); v.setUint32(4, 36 + data.length * 2, true); str(8, 'WAVE'); str(12, 'fmt ');
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, sr, true);
+  v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); str(36, 'data'); v.setUint32(40, data.length * 2, true);
+  for (var i = 0; i < data.length; i++) { var x = Math.max(-1, Math.min(1, data[i])); v.setInt16(44 + i * 2, x < 0 ? x * 0x8000 : x * 0x7fff, true); }
+  var bytes = new Uint8Array(buf), bin = '';
+  for (var k = 0; k < bytes.length; k += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(k, k + 0x8000));
+  return btoa(bin);
+}
+function fileToWav(file) {
+  return file.arrayBuffer().then(function (ab) {
+    var Ctx = window.AudioContext || window.webkitAudioContext, ctx = new Ctx();
+    return new Promise(function (res, rej) { ctx.decodeAudioData(ab, res, rej); }).then(function (audio) {
+      ctx.close(); return { wav: toWav(audio.getChannelData(0), audio.sampleRate), seconds: audio.duration };
+    });
+  });
+}
+
+/* ---------- state & navigation ---------- */
+var S = { me: null, roster: [], squads: [], week: '', view: '', overview: null, lastNotes: [], flushing: false };
+var COACH_TABS = [['deck', 'On deck'], ['review', 'Review'], ['inbox', 'Inbox'], ['weekly', 'Weekly']];
+var ATHLETE_TABS = [['checkins', 'Check-ins'], ['journal', 'Journal'], ['progress', 'Progress']];
+
+function tabsFor() { return S.me.role === 'Coach' ? COACH_TABS : ATHLETE_TABS; }
+function renderTabs() {
+  var unread = S.overview ? S.overview.unread : 0;
+  $('#tabs-inner').innerHTML = tabsFor().map(function (t) {
+    var badge = t[0] === 'inbox' && unread ? '<span class="badge">' + unread + '</span>' : '';
+    return '<button data-go="' + t[0] + '"' + (S.view === t[0] ? ' aria-current="page"' : '') + '>' + t[1] + badge + '</button>';
+  }).join('');
+  $('#tabs').hidden = false;
+}
+function go(view) {
+  S.view = view; store.set('mprove-view-' + S.me.role, view); renderTabs();
+  window.scrollTo(0, 0);
+  ({ deck: viewDeck, review: viewReview, inbox: viewInbox, weekly: viewWeekly,
+     checkins: viewCheckins, journal: viewJournal, progress: viewProgress })[view]();
+}
+document.addEventListener('click', function (e) {
+  var b = e.target.closest('[data-go]'); if (b) go(b.getAttribute('data-go'));
+});
+
+function boot() {
+  if (!CODE) return signin('Open mProve with the personal link your coach shared with you.');
+  api('api_bootstrap').then(function (r) {
+    S.me = r.me; S.roster = r.roster; S.squads = r.squads; S.week = r.weekStart;
+    var saved = store.get('mprove-view-' + S.me.role);
+    var valid = tabsFor().map(function (t) { return t[0]; });
+    if (S.me.role === 'Coach') refreshOverview().catch(function () {});
+    go(valid.indexOf(saved) !== -1 ? saved : valid[0]);
+    flushAll();
+  }).catch(function (e) { store.set('mprove-k', ''); signin(e.message); });
+}
+function signin(msg) {
+  setHeader('mProve');
+  $('#view').innerHTML = '<div class="signin"><b>Sign in to mProve</b><p class="small">' + esc(msg) + '</p>' +
+    '<input type="text" id="code-in" placeholder="Paste your access code or link" autocomplete="off">' +
+    '<button class="btn primary" id="code-go">Sign in</button></div>';
+  $('#code-go').onclick = function () { CODE = cleanCode($('#code-in').value); store.set('mprove-k', CODE); boot(); };
+}
+function refreshOverview() {
+  return api('coach_overview').then(function (o) { S.overview = o; renderTabs(); return o; });
+}
+
+/* ---------- uploads ---------- */
+function flushAll() {
+  if (S.flushing || !S.me) return Promise.resolve();
+  S.flushing = true;
+  var failed = false;
+  function next(list, st, send) {
+    if (!list.length || failed) return Promise.resolve();
+    var item = list.shift();
+    return send(item).then(function (res) { return Q.del(st, item.id).then(function () { return res; }); })
+      .then(function (res) {
+        if (st === 'clips') { S.lastNotes = res.concat(S.lastNotes).slice(0, 6); }
+        return next(list, st, send);
+      }, function (e) { failed = true; S.lastError = e.message; });
+  }
+  var jobs = Promise.resolve();
+  if (S.me.role === 'Coach') {
+    jobs = Q.all('clips').then(function (list) {
+      return next(list, 'clips', function (c) {
+        return api('coach_uploadNote', { audio: c.audio, mime: c.mime, session: c.session, recordedAt: c.at, clipId: c.id });
+      });
+    });
+  }
+  return jobs.then(function () { return Q.all('journal'); })
+    .then(function (list) { return next(list, 'journal', function (j) { return api('athlete_saveJournal', j.entry); }); })
+    .then(function () {
+      S.flushing = false;
+      if (!failed) S.lastError = '';
+      if (S.view === 'deck') { updateDeckStatus(); renderLastNotes(); refreshOverview().then(renderCoverage).catch(function () {}); }
+    });
+}
+window.addEventListener('online', flushAll);
+setInterval(flushAll, 30000);
+
+/* ---------- coach: On deck ---------- */
+function defaultSession() {
+  var d = new Date(), part = d.getHours() < 12 ? 'AM' : 'PM';
+  return (S.squads[0] || 'Practice') + ' · ' + dayName(d) + ' ' + part;
+}
+function viewDeck() {
+  var session = store.get('mprove-session') || defaultSession();
+  if (session.indexOf(dayName(new Date())) === -1) session = defaultSession();
+  setHeader('On deck', session);
+  $('#view').innerHTML =
+    '<div class="card"><div class="row"><span class="label">Coverage this week</span><span id="cov-pill" class="pill plain">…</span></div><div id="coverage" class="coverage"></div></div>' +
+    '<div class="recwrap"><button class="rec" id="rec" aria-label="Hold to record a note">HOLD<br>TO TALK<small>or tap to start / stop</small></button></div>' +
+    '<div class="status" id="deck-status"></div>' +
+    '<div id="last-notes" style="display:flex;flex-direction:column;gap:8px"></div>' +
+    '<div id="open-qs"></div>' +
+    '<details class="card"><summary class="row"><span class="label">Session & options</span><span class="small">change</span></summary>' +
+      '<label class="small" for="session-in">Session tag on every note</label><input type="text" id="session-in" value="' + esc(session) + '">' +
+      '<button class="btn sm" id="upload-memo">Upload a voice memo instead</button>' +
+      '<p class="small">Use this if the record button isn\'t allowed on this phone. It opens the phone\'s recorder.</p></details>';
+  $('#session-in').onchange = function () { store.set('mprove-session', this.value); setHeader('On deck', this.value); };
+  $('#upload-memo').onclick = function () { $('#file-audio').click(); };
+  bindRecord($('#rec'));
+  renderCoverage(); updateDeckStatus(); renderLastNotes();
+}
+function renderCoverage() {
+  var box = $('#coverage'); if (!box || !S.overview) return;
+  var cov = S.overview.coverage;
+  box.innerHTML = cov.map(function (c) {
+    var cls = c.notes >= 2 ? '' : (c.notes === 1 ? 'lo' : 'no');
+    return '<div title="' + esc(c.name) + '"><i class="' + cls + '"></i><span>' + esc(c.first) + ' ' + c.notes + '</span></div>';
+  }).join('') || '<span class="small">No athletes in the roster.</span>';
+  var low = cov.filter(function (c) { return c.notes < 2; }).length;
+  var p = $('#cov-pill'); p.textContent = low ? low + ' under 2 notes' : 'Everyone covered'; p.className = 'pill ' + (low ? 'warn' : 'good');
+  var open = S.overview.threads.filter(function (t) { return t.open; });
+  $('#open-qs').innerHTML = open.length ? '<div class="card"><span class="label">Questions to answer at practice</span>' +
+    open.map(function (t) { return '<div class="small"><b>' + esc(t.athlete) + ':</b> ' + esc(t.messages[t.messages.length - 1].text) + '</div>'; }).join('') + '</div>' : '';
+}
+function updateDeckStatus() {
+  var el = $('#deck-status'); if (!el) return;
+  Q.all('clips').then(function (list) {
+    var off = navigator.onLine === false;
+    el.textContent = list.length ? list.length + (off ? ' saved, will upload when back online' : ' uploading…') :
+      (S.lastError ? 'Upload problem: ' + S.lastError : 'All notes uploaded');
+  });
+}
+function renderLastNotes() {
+  var box = $('#last-notes'); if (!box) return;
+  box.innerHTML = S.lastNotes.slice(0, 4).map(function (n) {
+    var cls = n.status === 'Needs_Review' ? 'warn' : 'good';
+    return '<div class="card"><div class="row"><b>' + esc(n.athlete || 'Unknown athlete') + '</b><span class="pill ' + cls + '">' +
+      (n.status === 'Needs_Review' ? 'Check in Review' : esc(n.obsId)) + '</span></div><div class="small note">' + esc(n.note) + '</div></div>';
+  }).join('');
+}
+function bindRecord(btn) {
+  var downAt = 0, starting = false;
+  function begin() {
+    if (Rec.active || starting) return;
+    starting = true;
+    Rec.start().then(function () { starting = false; btn.classList.add('on'); btn.innerHTML = 'RECORDING<small>release or tap to save</small>'; buzz(); })
+      .catch(function (e) {
+        starting = false;
+        toast('Microphone not available here. Use "Upload a voice memo" below.');
+        var d = $('details'); if (d) d.open = true;
+      });
+  }
+  function finish() {
+    if (!Rec.active) return;
+    var r = Rec.stop();
+    btn.classList.remove('on'); btn.innerHTML = 'HOLD<br>TO TALK<small>or tap to start / stop</small>';
+    if (r.seconds < 0.8) { toast('Too short, nothing saved.'); return; }
+    queueClip(r.wav);
+  }
+  btn.addEventListener('pointerdown', function (e) {
+    e.preventDefault();
+    if (Rec.active) { finish(); downAt = 0; return; }
+    downAt = Date.now(); begin();
+  });
+  btn.addEventListener('pointerup', function () {
+    if (downAt && Date.now() - downAt > 450) finish(); // hold-to-talk; a quick tap keeps recording
+    downAt = 0;
+  });
+  btn.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+  btn.addEventListener('keydown', function (e) {
+    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); Rec.active ? finish() : begin(); }
+  });
+}
+function queueClip(wav) {
+  var id = 'CLIP-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase();
+  var session = ($('#session-in') && $('#session-in').value) || defaultSession();
+  Q.add('clips', { id: id, at: Date.now(), audio: wav, mime: 'audio/wav', session: session }).then(function () {
+    buzz(); toast('Note saved'); updateDeckStatus(); flushAll();
+  });
+}
+$('#file-audio').addEventListener('change', function () {
+  var f = this.files[0]; this.value = ''; if (!f) return;
+  toast('Preparing clip…');
+  fileToWav(f).then(function (r) { queueClip(r.wav); }).catch(function () { toast('That file could not be read as audio.'); });
+});
+
+/* ---------- coach: Review ---------- */
+function athleteOptions(selected) {
+  return '<option value="">Pick athlete…</option>' + S.roster.map(function (a) {
+    return '<option value="' + esc(a.id) + '"' + (a.id === selected ? ' selected' : '') + '>' + esc(a.name) + '</option>';
+  }).join('');
+}
+function viewReview() {
+  setHeader('Review', '…');
+  $('#view').innerHTML = '<div class="empty">Loading notes…</div>';
+  refreshOverview().then(function (o) {
+    var list = o.review;
+    var need = list.filter(function (n) { return n.status === 'Needs_Review'; }).length;
+    setHeader('Review', need ? need + ' to check' : 'All clear', need ? 'warn' : 'good');
+    if (!list.length) { $('#view').innerHTML = '<div class="empty">No notes waiting. New deck notes from the last 3 days show up here.</div>'; return; }
+    $('#view').innerHTML = list.map(function (n) {
+      var unsure = n.status === 'Needs_Review';
+      var conf = Math.round(parseFloat(n.conf || 0) * 100);
+      return '<div class="card" data-obs="' + esc(n.id) + '">' +
+        '<div class="row"><b>' + esc(n.athlete || 'Unknown athlete') + '</b><span class="pill ' + (unsure ? 'warn' : 'good') + '">' +
+          (unsure ? (n.athleteId ? 'Name unsure · ' + conf + '%' : 'Pick athlete') : conf + '% match') + '</span></div>' +
+        '<div class="tags">' + [n.event, n.focus, n.type].filter(String).map(function (t) { return '<span class="tag">' + esc(t) + '</span>'; }).join('') + '</div>' +
+        '<select class="pick" aria-label="Athlete">' + athleteOptions(n.athleteId) + '</select>' +
+        '<textarea class="txt" aria-label="Note">' + esc(n.note) + '</textarea>' +
+        '<div class="small">' + [fmtTime(n.time), n.session, n.raw ? 'heard: "' + n.raw + '"' : ''].filter(String).map(esc).join(' · ') + '</div>' +
+        '<div class="btns">' + (n.audio ? '<a class="btn sm" href="' + esc(n.audio) + '" target="_blank" rel="noopener">Play clip</a>' : '') +
+          '<button class="btn sm danger" data-del>Delete</button><button class="btn sm primary" data-ok>Confirm</button></div></div>';
+    }).join('') + '<button class="btn primary" id="confirm-all">Confirm all with an athlete picked</button>';
+    $$('[data-ok]').forEach(function (b) { b.onclick = function () { confirmCard(b.closest('.card')).then(viewReview).catch(showError); }; });
+    $$('[data-del]').forEach(function (b) {
+      b.onclick = function () {
+        if (b.dataset.sure) { api('coach_deleteObs', b.closest('.card').dataset.obs).then(viewReview).catch(showError); }
+        else { b.dataset.sure = 1; b.textContent = 'Tap to delete'; }
+      };
+    });
+    $('#confirm-all').onclick = function () {
+      var cards = $$('.card[data-obs]').filter(function (c) { return $('.pick', c).value; });
+      this.disabled = true;
+      cards.reduce(function (p, c) { return p.then(function () { return confirmCard(c); }); }, Promise.resolve())
+        .then(function () { toast(cards.length + ' confirmed'); viewReview(); }).catch(showError);
+    };
+  }).catch(showError);
+}
+function confirmCard(card) {
+  var athlete = $('.pick', card).value;
+  if (!athlete) return Promise.reject(new Error('Pick an athlete first.'));
+  return api('coach_confirmObs', card.dataset.obs, athlete, $('.txt', card).value);
+}
+
+/* ---------- threads (shared by coach and athlete) ---------- */
+function bubbles(t, mine) {
+  return '<div class="bubbles">' + t.messages.map(function (m) {
+    return '<div class="bubble ' + (m.from === mine ? 'me' : 'them') + '">' + esc(m.text) + '<span class="t">' + esc(m.from) + ' · ' + esc(fmtTime(m.time)) + '</span></div>';
+  }).join('') + '</div>';
+}
+
+/* ---------- coach: Inbox ---------- */
+function viewInbox() {
+  setHeader('Inbox', '…');
+  $('#view').innerHTML = '<div class="empty">Loading…</div>';
+  refreshOverview().then(function (o) {
+    setHeader('Inbox', o.unread ? o.unread + ' unread' : 'No unread', o.unread ? 'bad' : 'good');
+    var low = o.coverage.filter(function (c) { return c.notes < 2; });
+    var html = o.threads.map(function (t) {
+      return '<div class="card" data-thread="' + esc(t.id) + '"><div class="row"><b>' + esc(t.athlete) + '</b>' +
+        '<span class="pill ' + (t.open ? 'bad' : 'good') + '">' + (t.open ? 'Unread' : esc(t.status.replace(/_/g, ' '))) + '</span></div>' +
+        (t.refText ? '<div class="quote">' + esc(t.ref) + ' · ' + esc(t.refText) + '</div>' : '') + bubbles(t, 'Coach') +
+        '<textarea class="txt" placeholder="Reply to ' + esc(t.athlete.split(' ')[0]) + '…" aria-label="Reply"></textarea>' +
+        '<div class="btns">' + (t.open ? '<button class="btn sm" data-practice>Answered at practice</button>' : '') + '<button class="btn sm primary" data-reply>Send reply</button></div></div>';
+    }).join('');
+    if (!o.threads.length) html = '<div class="empty">No questions from athletes yet.</div>';
+    html += '<div class="card"><div class="row"><span class="label">Needs attention this week</span><span class="small">under 2 notes</span></div>' +
+      (low.length ? low.map(function (c) { return '<div class="row"><span>' + esc(c.name) + '</span><span class="pill ' + (c.notes ? 'warn' : 'bad') + '">' + c.notes + ' note' + (c.notes === 1 ? '' : 's') + '</span></div>'; }).join('')
+        : '<div class="small">Every athlete has at least 2 notes.</div>') + '</div>';
+    $('#view').innerHTML = html;
+    $$('[data-reply]').forEach(function (b) {
+      b.onclick = function () {
+        var c = b.closest('.card'); b.disabled = true;
+        api('coach_reply', c.dataset.thread, $('.txt', c).value).then(function () { toast('Reply sent'); viewInbox(); })
+          .catch(function (e) { b.disabled = false; showError(e); });
+      };
+    });
+    $$('[data-practice]').forEach(function (b) {
+      b.onclick = function () { api('coach_markAtPractice', b.closest('.card').dataset.thread).then(viewInbox).catch(showError); };
+    });
+  }).catch(showError);
+}
+
+/* ---------- coach: Weekly ---------- */
+S.weeklyWeek = '';
+function viewWeekly() {
+  var week = S.weeklyWeek || S.week;
+  setHeader('Weekly', 'Week of ' + week.slice(5).replace('-', '/'));
+  $('#view').innerHTML = '<div class="seg" id="wk"><button data-w="' + addDays(S.week, -7) + '">Last week</button><button data-w="' + S.week + '">This week</button></div><div id="wk-body"><div class="empty">Loading…</div></div>';
+  $$('#wk button').forEach(function (b) {
+    b.setAttribute('aria-pressed', b.dataset.w === week ? 'true' : 'false');
+    b.onclick = function () { S.weeklyWeek = b.dataset.w; viewWeekly(); };
+  });
+  api('coach_weekly', week).then(function (r) { renderWeekly(week, r.digests); }).catch(showError);
+}
+function renderWeekly(week, list) {
+  var order = { 'Pending Review': 0, 'Approved': 1, 'Not generated': 2, 'Skipped': 3, 'Sent': 4 };
+  list.sort(function (a, b) { return (order[a.status] || 0) - (order[b.status] || 0); });
+  var drafts = list.filter(function (d) { return d.status === 'Pending Review' || d.status === 'Approved'; });
+  var counts = {}; list.forEach(function (d) { counts[d.status] = (counts[d.status] || 0) + 1; });
+  var html = '<div class="row"><span class="small">' + list.length + ' athletes · ' + Object.keys(counts).map(function (k) { return counts[k] + ' ' + k.toLowerCase(); }).join(' · ') + '</span>' +
+    '<button class="btn sm" id="gen">' + (list.some(function (d) { return d.id; }) ? 'Regenerate drafts' : 'Generate drafts') + '</button></div>';
+  html += list.map(function (d) {
+    var cls = { 'Pending Review': 'warn', 'Approved': 'good', 'Sent': 'plain', 'Skipped': 'bad', 'Not generated': 'plain' }[d.status];
+    if (!d.id || d.status === 'Skipped') {
+      return '<div class="card"><div class="row"><b>' + esc(d.athlete) + '</b><span class="pill ' + cls + '">' +
+        (d.status === 'Skipped' ? 'Not enough data' : 'Not generated') + '</span></div><div class="small">' +
+        (d.status === 'Skipped' ? 'Fewer than 2 notes and no shared journal entries this week. Record more at the next practice.' : (d.notes || 0) + ' notes this week. Generate drafts to write one.') + '</div></div>';
+    }
+    var sent = d.status === 'Sent';
+    return '<div class="card" data-dig="' + esc(d.id) + '"><div class="row"><b>' + esc(d.athlete) + '</b><span class="pill ' + cls + '">' + esc(d.status) + '</span></div>' +
+      (sent ? '<div class="note small">' + esc(d.text) + '</div><div class="small">Sent ' + esc(d.sent) + ' to ' + esc(d.to) + '</div>' :
+        '<textarea class="txt" style="min-height:220px" aria-label="Check-in text">' + esc(d.text) + '</textarea>' +
+        '<div class="row"><span class="small">' + d.obs.length + ' notes · ' + d.threads.length + ' thread · ' + d.journal.length + ' journal · to ' + esc(d.to) + '</span><span class="small wc">' + d.words + ' words</span></div>' +
+        '<div class="btns"><button class="btn sm" data-save>Save edit</button>' + (d.status === 'Approved' ? '' : '<button class="btn sm primary" data-approve>Approve</button>') + '</div>') +
+      '</div>';
+  }).join('');
+  if (drafts.length) html += '<button class="btn primary" id="send-all">Approve & Send All (' + drafts.length + ')</button><p class="small" style="text-align:center">Emails each athlete, with the parent on CC.</p>';
+  $('#wk-body').innerHTML = html;
+
+  $$('.txt', $('#wk-body')).forEach(function (t) {
+    t.oninput = function () { $('.wc', t.closest('.card')).textContent = t.value.split(/\s+/).filter(String).length + ' words'; };
+  });
+  $('#gen').onclick = function () {
+    var b = this; b.disabled = true; b.textContent = 'Writing drafts…';
+    api('coach_generate', week).then(function (r) {
+      toast('Drafted ' + r.drafted + ', skipped ' + r.skipped + (r.errors.length ? ', ' + r.errors.length + ' failed' : ''));
+      if (r.errors.length) console.log(r.errors);
+      viewWeekly();
+    }).catch(function (e) { b.disabled = false; showError(e); });
+  };
+  $$('[data-save]').forEach(function (b) {
+    b.onclick = function () { var c = b.closest('.card'); api('coach_saveDigest', c.dataset.dig, $('.txt', c).value).then(function () { toast('Saved'); }).catch(showError); };
+  });
+  $$('[data-approve]').forEach(function (b) {
+    b.onclick = function () { var c = b.closest('.card'); api('coach_approve', c.dataset.dig, $('.txt', c).value).then(viewWeekly).catch(showError); };
+  });
+  var sa = $('#send-all');
+  if (sa) sa.onclick = function () {
+    if (!sa.dataset.sure) { sa.dataset.sure = 1; sa.textContent = 'Tap again to email ' + drafts.length + ' check-in' + (drafts.length === 1 ? '' : 's'); return; }
+    sa.disabled = true; sa.textContent = 'Sending…';
+    var cards = $$('[data-dig]').filter(function (c) { return $('.txt', c); });
+    cards.reduce(function (p, c) { return p.then(function () { return api('coach_saveDigest', c.dataset.dig, $('.txt', c).value); }); }, Promise.resolve())
+      .then(function () { return api('coach_approveAndSendAll', week, drafts.map(function (d) { return d.id; })); })
+      .then(function (n) { toast(n + ' sent'); viewWeekly(); })
+      .catch(function (e) { sa.disabled = false; showError(e); });
+  };
+}
+
+/* ---------- athlete: Check-ins ---------- */
+function viewCheckins() {
+  setHeader('Check-ins', '…');
+  $('#view').innerHTML = '<div class="empty">Loading…</div>';
+  api('athlete_home').then(function (h) {
+    var latest = h.digests[0];
+    setHeader('Check-ins', latest ? 'Week of ' + latest.week.slice(5).replace('-', '/') : 'Hi ' + S.me.first);
+    var byRef = {}; h.threads.forEach(function (t) { (byRef[t.ref] = byRef[t.ref] || []).push(t); });
+    function convo(refId) {
+      var ts = byRef[refId] || [], t = ts[0];
+      return (t ? bubbles(t, 'Athlete') : '') +
+        '<div class="composer" data-ref="' + esc(refId) + '" data-thread="' + esc(t ? t.id : '') + '">' +
+        '<textarea class="txt" placeholder="' + (t ? 'Reply…' : 'Ask your coach about this…') + '" aria-label="Message"></textarea>' +
+        '<button class="btn sm primary" data-send style="margin-top:6px">Send</button></div>';
+    }
+    var html = '';
+    if (latest) {
+      html += '<div class="card"><div class="small">From your coach · sent ' + esc(latest.sent) + '</div><div class="note">' + esc(latest.text.replace(/^Subject:\s*/, '')) + '</div>' + convo(latest.id) + '</div>';
+    } else {
+      html += '<div class="empty">Your first weekly check-in will appear here after your coach sends it.</div>';
+    }
+    if (h.notes.length) {
+      html += '<span class="label">Practice notes</span>' + h.notes.slice(0, 12).map(function (n) {
+        return '<details class="card"><summary><div class="row"><span class="small">' + esc(fmtTime(n.time)) + '</span><span class="tags">' +
+          [n.event, n.focus].filter(String).map(function (t) { return '<span class="tag">' + esc(t) + '</span>'; }).join('') + '</span></div>' +
+          '<div class="note">' + esc(n.note) + '</div>' + (byRef[n.id] ? '<span class="pill">' + byRef[n.id][0].messages.length + ' messages</span>' : '<span class="small">Tap to ask about this</span>') + '</summary>' + convo(n.id) + '</details>';
+      }).join('');
+    }
+    if (h.digests.length > 1) {
+      html += '<span class="label">Earlier check-ins</span>' + h.digests.slice(1).map(function (d) {
+        return '<details class="card"><summary class="row"><b>Week of ' + esc(d.week) + '</b><span class="small">open</span></summary><div class="note small">' + esc(d.text.replace(/^Subject:\s*/, '')) + '</div>' + convo(d.id) + '</details>';
+      }).join('');
+    }
+    $('#view').innerHTML = html;
+    $$('[data-send]').forEach(function (b) {
+      b.onclick = function () {
+        var c = b.closest('.composer'); b.disabled = true;
+        api('athlete_post', c.dataset.ref, $('.txt', c).value, c.dataset.thread).then(function () { toast('Sent to your coach'); viewCheckins(); })
+          .catch(function (e) { b.disabled = false; showError(e); });
+      };
+    });
+  }).catch(showError);
+}
+
+/* ---------- athlete: Journal ---------- */
+var METRIC_TYPES = ['50m Pace', '100m Pace', 'Split Time', 'Stroke Count per 25m', 'UW Kicks', 'Breaths Inside Flags', 'Test Set Average'];
+function segHtml(id, opts, val) {
+  return '<div class="seg" id="' + id + '">' + opts.map(function (o) {
+    var v = Array.isArray(o) ? o[0] : o, l = Array.isArray(o) ? o[1] : o;
+    return '<button type="button" data-v="' + esc(v) + '" aria-pressed="' + (v === val) + '">' + esc(l) + '</button>';
+  }).join('') + '</div>';
+}
+function bindSeg(id) {
+  $$('#' + id + ' button').forEach(function (b) {
+    b.onclick = function () { $$('#' + id + ' button').forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); };
+  });
+}
+function segVal(id) { var b = $('#' + id + ' [aria-pressed=true]'); return b ? b.dataset.v : ''; }
+function metricRow() {
+  return '<div class="metric"><input type="text" class="m-type" list="metric-types" placeholder="Metric, e.g. 50m Pace" aria-label="Metric">' +
+    '<input type="number" step="any" inputmode="decimal" class="m-val" placeholder="Value" aria-label="Value">' +
+    '<select class="m-unit" aria-label="Unit"><option value="s">sec</option><option value="count">count</option><option value="strokes/25m">str/25m</option></select>' +
+    '<input type="number" step="any" inputmode="decimal" class="m-tgt" placeholder="Target" aria-label="Target">' +
+    '<button type="button" class="btn sm" data-rm aria-label="Remove metric">×</button></div>';
+}
+function viewJournal() {
+  setHeader('Log practice', todayStr().slice(5).replace('-', '/'));
+  $('#view').innerHTML =
+    '<form id="jf" class="card" autocomplete="off">' +
+    '<div class="row"><label class="label" for="j-date">Date</label><input type="date" id="j-date" value="' + todayStr() + '" style="width:auto"></div>' +
+    segHtml('j-type', ['Swim', 'Dryland', 'Meet', 'Rest'], 'Swim') +
+    '<div><div class="row"><label for="j-rpe">Effort (RPE)</label><b id="j-rpe-v">7</b></div><input type="range" id="j-rpe" min="1" max="10" value="7"></div>' +
+    '<div><div class="row"><label for="j-feel">Feel / energy</label><b id="j-feel-v">7</b></div><input type="range" id="j-feel" min="1" max="10" value="7"></div>' +
+    '<details><summary class="small">+ Sleep and focus (optional)</summary>' +
+      '<div class="row"><label for="j-sleep">Sleep quality 1–5</label><input type="number" id="j-sleep" min="1" max="5" style="width:80px"></div>' +
+      '<div class="row"><label for="j-focus">Mental focus 1–5</label><input type="number" id="j-focus" min="1" max="5" style="width:80px"></div></details>' +
+    '<input type="text" id="j-set" placeholder="Main set, e.g. Sprint 50s Fly" aria-label="Main set">' +
+    '<span class="label">Metrics</span><div id="metrics" style="display:grid;gap:8px">' + metricRow() + '</div>' +
+    '<button type="button" class="btn sm" id="add-metric">+ Add metric</button>' +
+    '<datalist id="metric-types">' + METRIC_TYPES.map(function (t) { return '<option value="' + esc(t) + '">'; }).join('') + '</datalist>' +
+    '<textarea id="j-refl" placeholder="How did it feel? Tap the mic on your keyboard to dictate." aria-label="Reflection"></textarea>' +
+    segHtml('j-vis', [['Coach_Shared', 'Share with coach'], ['Private', 'Private']], 'Coach_Shared') +
+    '<button class="btn primary" type="submit">Save entry</button></form>' +
+    '<div id="j-list"></div>';
+  bindSeg('j-type'); bindSeg('j-vis');
+  ['rpe', 'feel'].forEach(function (k) { $('#j-' + k).oninput = function () { $('#j-' + k + '-v').textContent = this.value; }; });
+  $('#add-metric').onclick = function () { $('#metrics').insertAdjacentHTML('beforeend', metricRow()); };
+  $('#metrics').addEventListener('click', function (e) { if (e.target.hasAttribute('data-rm')) e.target.closest('.metric').remove(); });
+  $('#jf').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var entry = {
+      date: $('#j-date').value, sessionType: segVal('j-type'), rpe: $('#j-rpe').value, feel: $('#j-feel').value,
+      sleep: $('#j-sleep').value, focus: $('#j-focus').value, eventSet: $('#j-set').value.trim(),
+      reflection: $('#j-refl').value.trim(), visibility: segVal('j-vis'),
+      metrics: $$('#metrics .metric').map(function (m) {
+        return { type: $('.m-type', m).value.trim(), value: $('.m-val', m).value, unit: $('.m-unit', m).value, target: $('.m-tgt', m).value };
+      }).filter(function (m) { return m.type && m.value !== ''; })
+    };
+    var id = 'J' + Date.now();
+    Q.add('journal', { id: id, at: Date.now(), entry: entry }).then(function () {
+      toast(navigator.onLine === false ? 'Saved on this phone. It will upload when you are online.' : 'Entry saved');
+      return flushAll();
+    }).then(viewJournal);
+  });
+  api('athlete_journal').then(function (j) {
+    var by = {}, order = [];
+    j.rows.forEach(function (r) { if (!by[r.id]) { by[r.id] = []; order.push(r.id); } by[r.id].push(r); });
+    $('#j-list').innerHTML = order.length ? '<span class="label">Recent entries</span>' + order.slice(0, 8).map(function (id) {
+      var r = by[id][0];
+      return '<div class="card"><div class="row"><b>' + esc(r.date) + ' · ' + esc(r.session) + '</b><span class="pill ' + (r.visibility === 'Private' ? 'plain' : '') + '">' + (r.visibility === 'Private' ? 'Private' : 'Shared') + '</span></div>' +
+        '<div class="small">RPE ' + esc(r.rpe || '–') + ' · Feel ' + esc(r.feel || '–') + (r.set ? ' · ' + esc(r.set) : '') + '</div>' +
+        by[id].filter(function (m) { return m.type; }).map(function (m) {
+          return '<div class="row small"><span>' + esc(m.type) + '</span><span>' + esc(m.value) + (m.unit === 's' ? 's' : '') + (m.target ? ' / target ' + esc(m.target) : '') + '</span></div>';
+        }).join('') + (r.reflection ? '<div class="small note">"' + esc(r.reflection) + '"</div>' : '') + '</div>';
+    }).join('') : '';
+  }).catch(function () {});
+}
+
+/* ---------- athlete: Progress ---------- */
+function viewProgress() {
+  setHeader('Progress', '…');
+  $('#view').innerHTML = '<div class="empty">Loading…</div>';
+  api('athlete_journal').then(function (j) {
+    var series = {};
+    j.rows.forEach(function (r) {
+      var v = parseFloat(r.value); if (!r.type || isNaN(v)) return;
+      (series[r.type] = series[r.type] || []).push({ date: r.date, v: v, unit: r.unit, target: parseFloat(r.target) });
+    });
+    var types = Object.keys(series).sort(function (a, b) {
+      return (series[b].length - series[a].length) || ((series[b][0].unit === 's') - (series[a][0].unit === 's')) || (a < b ? -1 : 1);
+    });
+    if (!types.length) { setHeader('Progress', ''); $('#view').innerHTML = '<div class="empty">Log a metric in your journal, such as 50m Pace or Stroke Count, and your trend will appear here.</div>'; return; }
+    var pick = store.get('mprove-metric'); if (types.indexOf(pick) === -1) pick = types[0];
+    var week = j.rows.filter(function (r) { return r.date >= addDays(todayStr(), -6) && r.rpe; });
+    var seen = {}, rpes = [];
+    week.forEach(function (r) { if (!seen[r.id]) { seen[r.id] = 1; rpes.push(+r.rpe); } });
+    var avgRpe = rpes.length ? (rpes.reduce(function (a, b) { return a + b; }, 0) / rpes.length).toFixed(1) : '–';
+    $('#view').innerHTML =
+      '<select id="metric-pick" aria-label="Metric">' + types.map(function (t) { return '<option' + (t === pick ? ' selected' : '') + '>' + esc(t) + '</option>'; }).join('') + '</select>' +
+      '<div class="card" id="chart"></div>' +
+      '<div class="card"><span class="label">Latest</span>' + types.slice(0, 6).map(function (t) {
+        var s = series[t].slice().sort(function (a, b) { return a.date < b.date ? -1 : 1; }), last = s[s.length - 1];
+        return '<div class="row"><span class="small">' + esc(t) + '</span><b style="font-family:var(--mono)">' + last.v + (last.unit === 's' ? 's' : '') + '</b></div>';
+      }).join('') + '<div class="row"><span class="small">Average RPE, last 7 days</span><b style="font-family:var(--mono)">' + avgRpe + '</b></div></div>' +
+      (j.coachNotes.length ? '<div class="card"><span class="label">Coach notes</span>' + j.coachNotes.slice(-3).reverse().map(function (n) {
+        return '<div class="small"><b>' + esc(fmtTime(n.time)) + ' · ' + esc(n.event) + '</b> ' + esc(n.note) + '</div>';
+      }).join('') + '</div>' : '');
+    function draw(t) {
+      setHeader('Progress', t);
+      $('#chart').innerHTML = chartSvg(t, series[t].slice().sort(function (a, b) { return a.date < b.date ? -1 : 1; }));
+    }
+    $('#metric-pick').onchange = function () { store.set('mprove-metric', this.value); draw(this.value); };
+    draw(pick);
+  }).catch(showError);
+}
+function chartSvg(name, pts) {
+  var W = 320, H = 170, L = 38, R = 12, T = 14, B = 30;
+  var isTime = pts[0].unit === 's';
+  var vals = pts.map(function (p) { return p.v; });
+  var tgt = pts.map(function (p) { return p.target; }).filter(function (x) { return !isNaN(x); }).pop();
+  var all = vals.concat(isNaN(tgt) || tgt === undefined ? [] : [tgt]);
+  var lo = Math.min.apply(null, all), hi = Math.max.apply(null, all);
+  if (lo === hi) { lo -= 1; hi += 1; }
+  var pad = (hi - lo) * 0.12; lo -= pad; hi += pad;
+  // For times, faster (smaller) is drawn higher.
+  function y(v) { var f = (v - lo) / (hi - lo); return isTime ? T + f * (H - T - B) : H - B - f * (H - T - B); }
+  function x(i) { return pts.length === 1 ? (L + W - R) / 2 : L + i * (W - L - R) / (pts.length - 1); }
+  var ticks = [lo + pad, (lo + hi) / 2, hi - pad];
+  var dec = hi - lo < 3 ? 1 : 0;
+  var line = pts.map(function (p, i) { return x(i).toFixed(1) + ',' + y(p.v).toFixed(1); }).join(' ');
+  var area = 'M' + x(0).toFixed(1) + ',' + (H - B) + ' L' + line.split(' ').join(' L') + ' L' + x(pts.length - 1).toFixed(1) + ',' + (H - B) + ' Z';
+  var last = pts[pts.length - 1];
+  var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" role="img" aria-label="' + esc(name) + ' over time">';
+  ticks.forEach(function (v) {
+    svg += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(v).toFixed(1) + '" y2="' + y(v).toFixed(1) + '" stroke="var(--line)"/>' +
+      '<text x="' + (L - 6) + '" y="' + (y(v) + 3).toFixed(1) + '" font-size="9" text-anchor="end" fill="var(--muted)">' + v.toFixed(dec) + '</text>';
+  });
+  if (tgt !== undefined && !isNaN(tgt)) {
+    svg += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(tgt).toFixed(1) + '" y2="' + y(tgt).toFixed(1) + '" stroke="var(--flag)" stroke-dasharray="4 3" stroke-width="1.3"/>' +
+      '<text x="' + (W - R) + '" y="' + (y(tgt) - 4).toFixed(1) + '" font-size="9" text-anchor="end" fill="var(--warn)">target ' + tgt + '</text>';
+  }
+  if (pts.length > 1) svg += '<path d="' + area + '" fill="var(--water)" fill-opacity=".13"/><polyline points="' + line + '" fill="none" stroke="var(--water)" stroke-width="2.2"/>';
+  pts.forEach(function (p, i) { svg += '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(p.v).toFixed(1) + '" r="' + (i === pts.length - 1 ? 4 : 2.5) + '" fill="var(--water)"/>'; });
+  svg += '<text x="' + x(pts.length - 1).toFixed(1) + '" y="' + (y(last.v) - 8).toFixed(1) + '" font-size="10" text-anchor="end" fill="var(--ink)" font-weight="600">' + last.v + (isTime ? 's' : '') + '</text>';
+  svg += '<text x="' + L + '" y="' + (H - 10) + '" font-size="9" fill="var(--muted)">' + esc(pts[0].date.slice(5)) + '</text>' +
+    '<text x="' + (W - R) + '" y="' + (H - 10) + '" font-size="9" text-anchor="end" fill="var(--muted)">' + esc(last.date.slice(5)) + '</text>';
+  if (isTime) svg += '<text x="' + ((L + W - R) / 2) + '" y="' + (H - 1) + '" font-size="8.5" text-anchor="middle" fill="var(--muted)">higher = faster</text>';
+  return svg + '</svg>';
+}
+
+boot();
+</script>
+</body>
+</html>
