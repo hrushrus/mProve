@@ -381,9 +381,61 @@ function viewDeck() {
     '<div id="open-qs"></div>' +
     '<details class="card"><summary class="row"><span class="label">Session & options</span><span class="small">change</span></summary>' +
       '<label class="small" for="session-in">Session tag on every note</label><input type="text" id="session-in" value="' + esc(session) + '">' +
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0">' +
+        (S.squads.length ? S.squads : ['National Development', 'Provincial Development', 'Senior Development']).map(function (sq) {
+          var d = new Date(), part = d.getHours() < 12 ? 'AM' : 'PM', day = dayName(d);
+          var active = session.indexOf(sq) !== -1;
+          return '<button type="button" class="btn sm' + (active ? ' primary' : '') + '" data-sq="' + esc(sq) + '" data-tag="' + esc(sq + ' · ' + day + ' ' + part) + '" style="flex:1;min-width:110px;padding:6px 8px;font-size:12px">' + esc(sq) + '</button>';
+        }).join('') +
+      '</div>' +
+      '<button class="btn sm" id="btn-add-athletes" style="margin-top:4px">+ Add Swimmers to Squad</button>' +
+      '<div id="add-athletes-form" hidden style="background:var(--bg);padding:10px;border-radius:10px;margin:6px 0;display:flex;flex-direction:column;gap:6px">' +
+        '<label class="small" for="new-ath-squad">Target squad</label>' +
+        '<select id="new-ath-squad">' +
+          (S.squads.length ? S.squads : ['National Development', 'Provincial Development', 'Senior Development']).map(function (sq) {
+            return '<option value="' + esc(sq) + '">' + esc(sq) + '</option>';
+          }).join('') +
+        '</select>' +
+        '<label class="small" for="new-ath-names">Swimmer names (one per line)</label>' +
+        '<textarea id="new-ath-names" placeholder="Olivia Guo&#10;Liam Blais" style="min-height:60px"></textarea>' +
+        '<div class="btns"><button class="btn sm primary" id="save-new-athletes">Save to Roster</button><button class="btn sm" id="cancel-new-athletes">Cancel</button></div>' +
+      '</div>' +
       '<button class="btn sm" id="upload-memo">Upload a voice memo instead</button>' +
       '<p class="small">Use this if the record button isn\'t allowed on this phone. It opens the phone\'s recorder.</p></details>';
   $('#session-in').onchange = function () { store.set('mprove-session', this.value); setHeader('On deck', this.value); };
+  $$('[data-sq]').forEach(function (btn) {
+    btn.onclick = function () {
+      var tag = this.getAttribute('data-tag');
+      $('#session-in').value = tag;
+      store.set('mprove-session', tag);
+      setHeader('On deck', tag);
+      $$('[data-sq]').forEach(function (b) {
+        if (b === btn) b.classList.add('primary'); else b.classList.remove('primary');
+      });
+    };
+  });
+  $('#btn-add-athletes').onclick = function () { $('#add-athletes-form').hidden = !$('#add-athletes-form').hidden; };
+  $('#cancel-new-athletes').onclick = function () { $('#add-athletes-form').hidden = true; };
+  $('#save-new-athletes').onclick = function () {
+    var sq = $('#new-ath-squad').value;
+    var lines = $('#new-ath-names').value.split('\n').map(function (s) { return s.trim(); }).filter(String);
+    if (!lines.length) return toast('Enter at least one name');
+    var list = lines.map(function (n) { return { name: n, squad: sq }; });
+    var btn = this; btn.disabled = true; btn.textContent = 'Adding…';
+    api('coach_addAthletes', list).then(function (r) {
+      toast('Added ' + r.added + ' swimmer(s) to ' + sq);
+      $('#add-athletes-form').hidden = true;
+      $('#new-ath-names').value = '';
+      btn.disabled = false; btn.textContent = 'Save to Roster';
+      return api('api_bootstrap').then(function (boot) {
+        S.roster = boot.roster; S.squads = boot.squads;
+        return refreshOverview();
+      }).then(renderCoverage);
+    }).catch(function (e) {
+      btn.disabled = false; btn.textContent = 'Save to Roster';
+      showError(e);
+    });
+  };
   $('#upload-memo').onclick = function () { $('#file-audio').click(); };
   bindRecord($('#rec'));
   renderCoverage(); updateDeckStatus(); renderLastNotes();

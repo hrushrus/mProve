@@ -6,6 +6,7 @@
 function onOpen() {
   SpreadsheetApp.getUi().createMenu('mProve')
     .addItem('Set up workbook', 'setupWorkbook')
+    .addItem('Add swimmers to squad…', 'promptAddAthletes')
     .addItem('Set Gemini API key', 'promptGeminiKey')
     .addItem('Show app links', 'showAppLinks')
     .addSeparator()
@@ -14,6 +15,55 @@ function onOpen() {
     .addSeparator()
     .addItem('Install schedules (Sunday drafts, audio cleanup)', 'installTriggers')
     .addToUi();
+}
+
+function promptAddAthletes() {
+  requireSheetUi_();
+  var ui = SpreadsheetApp.getUi();
+  var res1 = ui.prompt(
+    'mProve — Add Swimmers to Squad',
+    'Enter the Squad / Group name (e.g. National Development, Provincial Development, Senior Development):',
+    ui.ButtonSet.OK_CANCEL
+  );
+  if (res1.getSelectedButton() !== ui.Button.OK) return;
+  var squad = String(res1.getResponseText() || '').trim() || 'National Development';
+
+  var res2 = ui.prompt(
+    'mProve — Add Swimmers to ' + squad,
+    'Enter swimmer names (one per line, e.g. "Olivia Guo" or "Liam Blais"):',
+    ui.ButtonSet.OK_CANCEL
+  );
+  if (res2.getSelectedButton() !== ui.Button.OK) return;
+  var lines = String(res2.getResponseText() || '').split(/\r?\n/).map(function (s) { return s.trim(); }).filter(String);
+  if (!lines.length) {
+    ui.alert('No names entered.');
+    return;
+  }
+  var items = lines.map(function (line) {
+    var parts = line.split(/\s+/);
+    return { first: parts[0] || '', last: parts.slice(1).join(' ') || '', squad: squad };
+  });
+  var allRows = readTable_('Roster_Config');
+  var newRows = [];
+  items.forEach(function (a) {
+    var nextId = nextId_(allRows.concat(newRows), 'Athlete_ID', 'ATH', 3);
+    newRows.push({
+      Athlete_ID: nextId,
+      First_Name: a.first,
+      Last_Name: a.last,
+      Phonetic_Aliases: a.first + (a.last ? ', ' + a.first + ' ' + a.last : ''),
+      Squad_Group: a.squad,
+      Sport_Discipline: 'Swimming',
+      Primary_Events_Positions: '',
+      Athlete_Email: '',
+      Parent_Email: '',
+      Role: 'Athlete',
+      Active: 'yes',
+      Access_Code: newAccessCode_()
+    });
+  });
+  appendRows_('Roster_Config', newRows);
+  ui.alert('Added ' + newRows.length + ' swimmer(s) to ' + squad + ' in Roster_Config.');
 }
 
 function promptGeminiKey() {
@@ -179,6 +229,9 @@ function fillRosterDefaults_() {
     if (!r.Active) patch.Active = 'yes';
     if (!r.Access_Code) patch.Access_Code = newAccessCode_();
     if (r.Squad_Group === 'Senior Performance') patch.Squad_Group = 'National Development';
+    if (r.First_Name === 'Drew' && r.Last_Name === 'Currah' && r.Squad_Group !== 'Provincial Development') {
+      patch.Squad_Group = 'Provincial Development';
+    }
     if (r.First_Name === 'Alex' && r.Last_Name === 'Chen') {
       patch.First_Name = 'Sophie';
       patch.Last_Name = 'Rus';
@@ -188,6 +241,42 @@ function fillRosterDefaults_() {
     }
     if (Object.keys(patch).length) updateRow_('Roster_Config', r._row, patch);
   });
+
+  var currentRows = readTable_('Roster_Config');
+  var currentNames = currentRows.map(function (r) {
+    return (r.First_Name + ' ' + r.Last_Name).trim().toLowerCase();
+  });
+  var seedAthletes = [
+    { first: 'Olivia', last: 'Guo', aliases: 'Olivia, Liv, Livvy', squad: 'National Development', email: 'olivia.guo@example.com', parent: 'parent.guo@example.com', events: '100 Free, 200 Free' },
+    { first: 'LeAnne', last: 'Du', aliases: 'LeAnne, Leanne, Lee-Anne, Lee Anne', squad: 'National Development', email: 'leanne.du@example.com', parent: 'parent.du@example.com', events: '100 Back, 200 Back' },
+    { first: 'Liam', last: 'Blais', aliases: 'Liam, Lyam, Blaze', squad: 'Provincial Development', email: 'liam.blais@example.com', parent: 'parent.blais@example.com', events: '50 Free, 100 Free' }
+  ];
+  var toAdd = [];
+  seedAthletes.forEach(function (s) {
+    if (currentNames.indexOf((s.first + ' ' + s.last).toLowerCase()) === -1) {
+      var nextId = nextId_(currentRows.concat(toAdd), 'Athlete_ID', 'ATH', 3);
+      var row = {
+        Athlete_ID: nextId,
+        First_Name: s.first,
+        Last_Name: s.last,
+        Phonetic_Aliases: s.aliases,
+        Squad_Group: s.squad,
+        Sport_Discipline: 'Swimming',
+        Primary_Events_Positions: s.events,
+        Athlete_Email: s.email,
+        Parent_Email: s.parent,
+        Role: 'Athlete',
+        Active: 'yes',
+        Access_Code: newAccessCode_()
+      };
+      toAdd.push(row);
+      currentRows.push(row);
+    }
+  });
+  if (toAdd.length) {
+    appendRows_('Roster_Config', toAdd);
+    notes.push('Added ' + toAdd.length + ' athletes to Roster_Config: ' + toAdd.map(function (a) { return a.First_Name + ' ' + a.Last_Name; }).join(', '));
+  }
   var hasCoach = readTable_('Roster_Config').some(function (r) { return r.Role === 'Coach'; });
   if (!hasCoach) {
     var coachIds = readTable_('Coach_Feedback_Log').map(function (r) { return r.Coach_ID; }).filter(String);

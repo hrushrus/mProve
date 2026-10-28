@@ -29,6 +29,7 @@ function rpcMap_() {
     coach_saveDigest: coach_saveDigest,
     coach_approve: coach_approve,
     coach_approveAndSendAll: coach_approveAndSendAll,
+    coach_addAthletes: coach_addAthletes,
     athlete_home: athlete_home,
     athlete_post: athlete_post,
     athlete_saveJournal: athlete_saveJournal,
@@ -77,7 +78,11 @@ function person_(code) {
     if (coach) return coach;
   }
   // Auto-migrate legacy group name or swimmer names in live sheet
-  if (rows.some(function (r) { return r.Squad_Group === 'Senior Performance' || (r.First_Name === 'Alex' && r.Last_Name === 'Chen'); })) {
+  if (rows.some(function (r) {
+    return r.Squad_Group === 'Senior Performance' ||
+      (r.First_Name === 'Alex' && r.Last_Name === 'Chen') ||
+      (r.First_Name === 'Drew' && r.Last_Name === 'Currah' && r.Squad_Group !== 'Provincial Development');
+  }) || !rows.some(function (r) { return r.First_Name === 'Olivia' && r.Last_Name === 'Guo'; })) {
     fillRosterDefaults_();
     rows = readTable_('Roster_Config');
   }
@@ -110,12 +115,14 @@ function activeAthletes_() {
 function api_bootstrap(code) {
   var me = person_(code);
   var today = fmtDate_(new Date());
+  var defaultSquads = ['National Development', 'Provincial Development', 'Senior Development'];
+  var squads = me.Role === 'Coach' ? uniq_(activeAthletes_().map(function (r) { return r.Squad_Group; }).concat(defaultSquads)) : [];
   return {
     me: publicPerson_(me),
     weekStart: weekStartOf_(today),
     today: today,
     roster: me.Role === 'Coach' ? activeAthletes_().map(publicPerson_) : [publicPerson_(me)],
-    squads: me.Role === 'Coach' ? uniq_(activeAthletes_().map(function (r) { return r.Squad_Group; })) : []
+    squads: squads
   };
 }
 

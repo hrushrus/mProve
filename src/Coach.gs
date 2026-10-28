@@ -113,7 +113,7 @@ function coach_overview(code) {
     var n = log.filter(function (r) {
       return r.Athlete_ID === a.Athlete_ID && r.Week_Start_Date === week && r.Review_Status !== 'Deleted';
     }).length;
-    return { id: a.Athlete_ID, name: a.First_Name + ' ' + a.Last_Name, first: a.First_Name, notes: n };
+    return { id: a.Athlete_ID, name: a.First_Name + ' ' + a.Last_Name, first: a.First_Name, squad: a.Squad_Group, notes: n };
   });
 
   var since = addDays_(fmtDate_(new Date()), -3);
@@ -220,4 +220,45 @@ function findBy_(tab, col, value) {
   var r = readTable_(tab).filter(function (x) { return x[col] === value; })[0];
   if (!r) throw new Error(value + ' not found in ' + tab + '.');
   return r;
+}
+
+/**
+ * Allows a coach to populate a group/squad with athlete names directly from the app.
+ * athletes: Array of { first, last, name, squad, aliases, email, parentEmail, events }
+ */
+function coach_addAthletes(code, athletes) {
+  coach_(code);
+  if (!Array.isArray(athletes) || !athletes.length) throw new Error('No athletes provided.');
+  var allRows = readTable_('Roster_Config');
+  var newRows = [];
+  athletes.forEach(function (a) {
+    var first = a.first || '';
+    var last = a.last || '';
+    if (!first && !last && a.name) {
+      var parts = String(a.name).trim().split(/\s+/);
+      first = parts[0] || '';
+      last = parts.slice(1).join(' ') || '';
+    }
+    if (!first && !last) return;
+    var nextId = nextId_(allRows.concat(newRows), 'Athlete_ID', 'ATH', 3);
+    var row = {
+      Athlete_ID: nextId,
+      First_Name: first,
+      Last_Name: last,
+      Phonetic_Aliases: a.aliases || (first + (last ? ', ' + first + ' ' + last : '')),
+      Squad_Group: a.squad || 'National Development',
+      Sport_Discipline: a.sport || 'Swimming',
+      Primary_Events_Positions: a.events || '',
+      Athlete_Email: a.email || '',
+      Parent_Email: a.parentEmail || a.parent || '',
+      Role: 'Athlete',
+      Active: 'yes',
+      Access_Code: newAccessCode_()
+    };
+    newRows.push(row);
+  });
+  if (newRows.length) {
+    appendRows_('Roster_Config', newRows);
+  }
+  return { added: newRows.length, athletes: newRows.map(publicPerson_) };
 }

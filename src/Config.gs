@@ -42,7 +42,11 @@ var TABS = {
 
 /** Dropdown values written on setup. */
 var CHOICES = {
-  Roster_Config: { Role: ['Athlete', 'Coach'], Active: ['yes', 'no'] },
+  Roster_Config: {
+    Role: ['Athlete', 'Coach'],
+    Active: ['yes', 'no'],
+    Squad_Group: ['National Development', 'Provincial Development', 'Senior Development']
+  },
   Coach_Feedback_Log: { Review_Status: ['Auto', 'Needs_Review', 'Confirmed', 'Deleted'] },
   Weekly_Digests: { Coach_Approval_Status: ['Pending Review', 'Approved', 'Sent', 'Skipped'] },
   Athlete_Coach_Threads: {

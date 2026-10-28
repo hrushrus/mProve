@@ -21,7 +21,7 @@ ok('setup splits the stacked sheet into five tabs', () => {
 });
 ok('roster gets roles, access codes and a coach row', () => {
   const r = g.readTable_('Roster_Config');
-  assert.strictEqual(r.length, 4);
+  assert.strictEqual(r.length, 7);
   const coach = r.find(x => x.Role === 'Coach');
   assert.strictEqual(coach.Athlete_ID, 'COACH-01');
   assert(r.every(x => x.Access_Code.length === 16 && x.Active === 'yes'));
@@ -41,7 +41,7 @@ ok('existing notes are Confirmed, threads get message IDs', () => {
 ok('running setup twice does not duplicate rows', () => {
   g.setupWorkbook();
   assert.strictEqual(g.readTable_('Coach_Feedback_Log').length, 4);
-  assert.strictEqual(g.readTable_('Roster_Config').length, 4);
+  assert.strictEqual(g.readTable_('Roster_Config').length, 7);
   g.__promptText = 'new-gemini-key';
   g.promptGeminiKey();
   assert.strictEqual(g.__props.GEMINI_API_KEY, 'new-gemini-key');
@@ -62,16 +62,17 @@ ok('sign-in rejects bad codes and athletes calling coach functions', () => {
   assert.throws(() => g.api_bootstrap('0000000000000000'), /not valid/);
   assert.throws(() => g.coach_overview(CHRIS), /Only coaches/);
   const b = g.api_bootstrap(COACH);
-  assert.strictEqual(b.roster.length, 3);
+  assert.strictEqual(b.roster.length, 6);
+  deq(b.squads, ['National Development', 'Provincial Development', 'Senior Development']);
   const bCoach = g.api_bootstrap('coach');
   assert.strictEqual(bCoach.me.role, 'Coach');
   const bEmpty = g.api_bootstrap('');
   assert.strictEqual(bEmpty.me.role, 'Coach');
-  assert.strictEqual(g.api_bootstrap('https://script.google.com/macros/s/TEST/exec?k=' + COACH).roster.length, 3);
+  assert.strictEqual(g.api_bootstrap('https://script.google.com/macros/s/TEST/exec?k=' + COACH).roster.length, 6);
   assert.strictEqual(g.api_bootstrap(CHRIS).roster.length, 1);
   const rpcRes = JSON.parse(g.doPost({ postData: { contents: JSON.stringify({ fn: 'api_bootstrap', args: [COACH] }) } }).getContent());
   assert.strictEqual(rpcRes.ok, true);
-  assert.strictEqual(rpcRes.result.roster.length, 3);
+  assert.strictEqual(rpcRes.result.roster.length, 6);
   const badRpc = JSON.parse(g.doPost({ postData: { contents: JSON.stringify({ fn: 'setupWorkbook', args: [] }) } }).getContent());
   assert.strictEqual(badRpc.ok, false);
 });
@@ -131,7 +132,7 @@ ok('athlete asks about a note; coach inbox shows it unread; coach replies', () =
 });
 ok('coverage counts this week only', () => {
   const o = g.coach_overview(COACH);
-  assert.strictEqual(o.coverage.length, 3);
+  assert.strictEqual(o.coverage.length, 6);
 });
 ok('journal entry with two metrics saves as two rows with one ID', () => {
   const id = g.athlete_saveJournal(CHRIS, { date: '2026-10-24', sessionType: 'Swim', rpe: '7', feel: '8', eventSet: 'Sprint 50s Fly',
@@ -151,16 +152,28 @@ ok('weekly drafts: enough data gets a draft, too little is skipped, private jour
   g.__gemini.length = 0;
   g.__nextGemini = { subject: 'Weekly mProve Check-In: Chris — Fly finishes', wins: 'Six kicks off every wall.', focus: 'Eyes down into the wall.', coach_note: 'Reply here!' };
   const r = g.coach_generate(COACH, '2026-10-19');
-  deq([r.drafted, r.skipped, r.unchanged], [2, 1, 0]); // Chris, Drew drafted; Sophie has one note
+  deq([r.drafted, r.skipped, r.unchanged], [2, 4, 0]); // Chris, Drew drafted; Sophie, Olivia, LeAnne, Liam skipped (< 2 notes)
   const prompt = g.__gemini.find(b => /ATHLETE: Chris Rus/.test(b.contents[0].parts[0].text)).contents[0].parts[0].text;
   assert.match(prompt, /OBS-101/); assert.match(prompt, /THR-042/); assert.match(prompt, /JRN-310/);
   assert.doesNotMatch(prompt, /private thought/);
   const d = g.readTable_('Weekly_Digests');
-  assert.strictEqual(d.length, 3);
+  assert.strictEqual(d.length, 6);
   const chris = d.find(x => x.Digest_ID === 'DIG-20261019-001');
   assert.strictEqual(chris.Coach_Approval_Status, 'Pending Review');
   assert.match(chris.AI_Draft_Summary, /^Subject: Weekly mProve Check-In: Chris/);
   assert.strictEqual(d.find(x => x.Athlete_ID === 'ATH-003').Coach_Approval_Status, 'Skipped');
+});
+ok('coach can populate a group with athlete names', () => {
+  const res = g.coach_addAthletes(COACH, [
+    { name: 'Maya Lin', squad: 'Senior Development', email: 'maya@example.com' },
+    { first: 'Tyler', last: 'Scott', squad: 'Senior Development' }
+  ]);
+  assert.strictEqual(res.added, 2);
+  const r = g.readTable_('Roster_Config');
+  assert.strictEqual(r.length, 9);
+  const maya = r.find(x => x.First_Name === 'Maya' && x.Last_Name === 'Lin');
+  assert.strictEqual(maya.Squad_Group, 'Senior Development');
+  assert.strictEqual(maya.Athlete_ID, 'ATH-007');
 });
 ok('nothing is emailed before approval; approve & send emails athlete with parent on CC', () => {
   assert.strictEqual(g.__mail.length, 0);
