@@ -63,6 +63,10 @@ ok('sign-in rejects bad codes and athletes calling coach functions', () => {
   assert.throws(() => g.coach_overview(CHRIS), /Only coaches/);
   const b = g.api_bootstrap(COACH);
   assert.strictEqual(b.roster.length, 3);
+  const bCoach = g.api_bootstrap('coach');
+  assert.strictEqual(bCoach.me.role, 'Coach');
+  const bEmpty = g.api_bootstrap('');
+  assert.strictEqual(bEmpty.me.role, 'Coach');
   assert.strictEqual(g.api_bootstrap('https://script.google.com/macros/s/TEST/exec?k=' + COACH).roster.length, 3);
   assert.strictEqual(g.api_bootstrap(CHRIS).roster.length, 1);
   const rpcRes = JSON.parse(g.doPost({ postData: { contents: JSON.stringify({ fn: 'api_bootstrap', args: [COACH] }) } }).getContent());

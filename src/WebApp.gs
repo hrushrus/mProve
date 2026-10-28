@@ -66,12 +66,17 @@ function cleanCode_(raw) {
 
 function person_(code) {
   code = cleanCode_(code);
-  if (code.length < 12) throw new Error('Sign-in link is missing or incomplete. Ask your coach for your mProve link.');
   var rows = readTable_('Roster_Config');
   if (!rows.some(function (r) { return r.Access_Code; })) {
     fillRosterDefaults_();
     rows = readTable_('Roster_Config');
   }
+  // Testing convenience: default to Coach when code is empty or 'coach'
+  if (!code || code.toLowerCase() === 'coach') {
+    var coach = rows.filter(function (r) { return r.Role === 'Coach' && r.Active !== 'no'; })[0];
+    if (coach) return coach;
+  }
+  if (code.length < 12) throw new Error('Sign-in link is missing or incomplete. Ask your coach for your mProve link.');
   var me = rows.filter(function (r) {
     return String(r.Access_Code || '').trim().toLowerCase() === code.toLowerCase() && r.Active !== 'no';
   })[0];

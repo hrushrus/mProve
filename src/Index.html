@@ -141,7 +141,7 @@ function cleanCode(raw) {
 var URL_PARAMS = (function () { try { return new URLSearchParams(location.search); } catch (e) { return null; } })();
 if (URL_PARAMS && URL_PARAMS.get('api')) store.set('mprove-api', URL_PARAMS.get('api'));
 SERVER_CODE = cleanCode(SERVER_CODE) || cleanCode(URL_PARAMS && URL_PARAMS.get('k'));
-var CODE = SERVER_CODE || cleanCode(store.get('mprove-k')) || '';
+var CODE = SERVER_CODE || cleanCode(store.get('mprove-k')) || 'coach';
 if (SERVER_CODE) store.set('mprove-k', SERVER_CODE);
 
 function api(fn) {
@@ -317,10 +317,14 @@ function boot() {
 function signin(msg) {
   setHeader('mProve');
   var hero = ($('#brand-svg') && $('#brand-svg').outerHTML.replace('id="brand-svg"', 'class="hero-logo"')) || '';
-  $('#view').innerHTML = '<div class="signin">' + hero + '<b>Sign in to mProve</b><p class="small">' + esc(msg) + '</p>' +
-    '<input type="text" id="code-in" placeholder="Paste your access code or link" autocomplete="off">' +
-    '<button class="btn primary" id="code-go">Sign in</button></div>';
-  $('#code-go').onclick = function () { CODE = cleanCode($('#code-in').value); store.set('mprove-k', CODE); boot(); };
+  $('#view').innerHTML = '<div class="signin">' + hero + '<b>Sign in to mProve</b>' +
+    (msg ? '<p class="small">' + esc(msg) + '</p>' : '') +
+    '<button class="btn primary" id="coach-go" style="width:100%">Sign in as Coach</button>' +
+    '<div class="small" style="margin:4px 0">– or athlete sign-in –</div>' +
+    '<input type="text" id="code-in" placeholder="Paste access code or link" autocomplete="off">' +
+    '<button class="btn sm" id="code-go" style="width:100%">Sign in with Code</button></div>';
+  $('#coach-go').onclick = function () { CODE = 'coach'; store.set('mprove-k', 'coach'); boot(); };
+  $('#code-go').onclick = function () { CODE = cleanCode($('#code-in').value) || 'coach'; store.set('mprove-k', CODE); boot(); };
 }
 function refreshOverview() {
   return api('coach_overview').then(function (o) { S.overview = o; renderTabs(); return o; });
