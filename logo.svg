@@ -4,37 +4,54 @@
       <stop offset="0%" stop-color="#132c3b"/>
       <stop offset="100%" stop-color="#08141c"/>
     </linearGradient>
-    <linearGradient id="mp-mic" x1="20" y1="12" x2="42" y2="38" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#3fc1cc"/>
-      <stop offset="70%" stop-color="#28b5b5"/>
-      <stop offset="100%" stop-color="#a8d86b"/>
+    <linearGradient id="mp-mic" x1="20" y1="12" x2="44" y2="52" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#4ce0e6"/>
+      <stop offset="100%" stop-color="#199fb1"/>
     </linearGradient>
-    <linearGradient id="mp-wave" x1="12" y1="44" x2="48" y2="54" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#199fb1"/>
-      <stop offset="60%" stop-color="#3fc1cc"/>
-      <stop offset="100%" stop-color="#22a6b3"/>
-    </linearGradient>
-    <linearGradient id="mp-gold" x1="40" y1="20" x2="36" y2="42" gradientUnits="userSpaceOnUse">
+    <linearGradient id="mp-gold" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#ffd54f"/>
-      <stop offset="100%" stop-color="#e0a400"/>
+      <stop offset="100%" stop-color="#e09000"/>
     </linearGradient>
   </defs>
   <!-- Squircle Badge -->
   <rect width="64" height="64" rx="15" fill="url(#mp-bg)"/>
   <rect x="1.25" y="1.25" width="61.5" height="61.5" rx="13.75" stroke="#3fc1cc" stroke-opacity="0.22" stroke-width="1.5"/>
 
-  <!-- Gold Athletic Swoosh / Crest on Right -->
-  <path d="M41.5 20.5C47.5 23.5 50 31.5 45.5 37.5C42 42 36 43 33.5 41.5C38.5 40 43 35.5 43.2 29.5C43.3 25.8 42.5 22.8 41.5 20.5Z" fill="url(#mp-gold)"/>
+  <!-- Orbiting Motion Arc into Crossed Hockey Sticks -->
+  <path d="M21 17C28 10.5 40 10.5 46.5 18C52.5 25 51.5 36.5 43.5 43.5L24 54.5L14.5 50.5" stroke="url(#mp-mic)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>
+  <!-- Second Crossed Hockey Stick & Puck -->
+  <path d="M16 32L40 53.5L50 51" stroke="url(#mp-mic)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <ellipse cx="45.5" cy="53" rx="3.4" ry="1.6" fill="#08141c" stroke="#4ce0e6" stroke-width="1.4"/>
 
-  <!-- Microphone Capsule Outline + Side Grille Slots -->
-  <rect x="24" y="12" width="14" height="21" rx="7" stroke="url(#mp-mic)" stroke-width="3"/>
-  <path d="M24.5 18.5H27.5M24.5 22.5H27.5M24.5 26.5H27.5M34.5 18.5H37.5M34.5 22.5H37.5M34.5 26.5H37.5" stroke="url(#mp-mic)" stroke-width="2.4" stroke-linecap="round"/>
+  <!-- Subtle Swim Wave Tucked Underneath -->
+  <path d="M21 46.5C25.5 44.2 30 47.5 34.5 45.5C39 43.5 42.5 46 45.5 44" stroke="#3fc1cc" stroke-width="2" stroke-linecap="round" opacity="0.65"/>
 
-  <!-- Microphone U-Cradle & Stem -->
-  <path d="M19.5 24.5C19.5 31.1 24.9 36.5 31 36.5C37.1 36.5 42.5 31.1 42.5 24.5" stroke="url(#mp-mic)" stroke-width="3" stroke-linecap="round"/>
-  <line x1="31" y1="36.5" x2="31" y2="42.5" stroke="url(#mp-mic)" stroke-width="3" stroke-linecap="round"/>
+  <!-- Central Coach Microphone -->
+  <rect x="25" y="15" width="12" height="18" rx="6" fill="#0d212d" stroke="url(#mp-mic)" stroke-width="2.8"/>
+  <path d="M25.5 20.5H28M25.5 24H28M25.5 27.5H28M34 20.5H36.5M34 24H36.5M34 27.5H36.5" stroke="url(#mp-mic)" stroke-width="2" stroke-linecap="round"/>
+  <path d="M21 26C21 31.5 25.5 36 31 36C36.5 36 41 31.5 41 26" stroke="url(#mp-mic)" stroke-width="2.8" stroke-linecap="round"/>
+  <line x1="31" y1="36" x2="31" y2="42.5" stroke="url(#mp-mic)" stroke-width="2.8" stroke-linecap="round"/>
 
-  <!-- Hydrodynamic Swimming Waves -->
-  <path d="M14 43.5C19.5 40 25.5 42 31 45C36.5 48 43 47 48.5 42" stroke="url(#mp-wave)" stroke-width="3.4" stroke-linecap="round"/>
-  <path d="M16.5 49C21.5 46.5 26.5 48.5 31.5 51C36.5 53.5 41.5 52.5 45.5 49" stroke="url(#mp-wave)" stroke-width="2.8" stroke-linecap="round" opacity="0.85"/>
+  <!-- 4 Balls Along the Right Orbit Arc -->
+  <!-- 1. Volleyball (Top) -->
+  <g transform="translate(41.5, 14)">
+    <circle cx="0" cy="0" r="3.8" fill="#4ce0e6" stroke="#08141c" stroke-width="0.9"/>
+    <path d="M-3.2 0.4C-1 -1.4 1.4 -1.4 3.2 0.4M0 -3.5C1.1 -1 1.1 1.4 0 3.5" stroke="#08141c" stroke-width="0.9" stroke-linecap="round"/>
+  </g>
+  <!-- 2. Tennis Ball (Upper-Mid) -->
+  <g transform="translate(47.8, 21.2)">
+    <circle cx="0" cy="0" r="3.9" fill="#c8e636" stroke="#08141c" stroke-width="0.9"/>
+    <path d="M-2.6 -2.6C-0.7 -1 -0.7 1 -2.6 2.6M2.6 -2.6C0.7 -1 0.7 1 2.6 2.6" stroke="#08141c" stroke-width="0.9" stroke-linecap="round"/>
+  </g>
+  <!-- 3. Soccer Ball (Lower-Mid) -->
+  <g transform="translate(49, 30.2)">
+    <circle cx="0" cy="0" r="4.3" fill="#e4eef1" stroke="#08141c" stroke-width="0.9"/>
+    <polygon points="0,-2 1.9,-0.6 1.1,1.6 -1.1,1.6 -1.9,-0.6" fill="#08141c"/>
+    <path d="M0 -2V-4.1M1.9 -0.6L4 -1.3M1.1 1.6L2.5 3.4M-1.1 1.6L-2.5 3.4M-1.9 -0.6L-4 -1.3" stroke="#08141c" stroke-width="0.8"/>
+  </g>
+  <!-- 4. Basketball (Bottom-Right) -->
+  <g transform="translate(44.5, 39.2)">
+    <circle cx="0" cy="0" r="4.6" fill="url(#mp-gold)" stroke="#08141c" stroke-width="0.9"/>
+    <path d="M-4.3 0H4.3M0 -4.3V4.3M-3.1 -3.1C-1.2 -1.2 -1.2 1.2 -3.1 3.1M3.1 -3.1C1.2 -1.2 1.2 1.2 3.1 3.1" stroke="#08141c" stroke-width="0.9" stroke-linecap="round"/>
+  </g>
 </svg>
