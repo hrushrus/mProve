@@ -17,9 +17,13 @@
   <rect width="64" height="64" rx="15" fill="url(#mp-bg)"/>
   <rect x="1.25" y="1.25" width="61.5" height="61.5" rx="13.75" stroke="#3fc1cc" stroke-opacity="0.22" stroke-width="1.5"/>
 
-  <!-- Orbiting Motion Arc into Crossed Hockey Sticks -->
-  <path d="M21 17C28 10.5 40 10.5 46.5 18C52.5 25 51.5 36.5 43.5 43.5L24 54.5L14.5 50.5" stroke="url(#mp-mic)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>
-  <!-- Second Crossed Hockey Stick & Puck -->
+  <!-- Orbiting Motion Arc into Lacrosse Stick (Top-Right to Bottom-Left Lacrosse Head) -->
+  <path d="M21 17C28 10.5 40 10.5 46.5 18C52.5 25 51.5 36.5 43.5 43.5L23 51" stroke="url(#mp-mic)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>
+  <!-- Lacrosse Stick Head with Netting (Bottom-Left) -->
+  <path d="M23 51L14.5 48.5C12.2 47.8 11.2 50.5 12.8 52.5L17.5 55.5C19.2 56.5 21.5 55 23 51Z" fill="#0d212d" stroke="#4ce0e6" stroke-width="2"/>
+  <path d="M15 49.5L19.5 54.5M18 49.8L15 53.5M20.5 50.5L17.5 54.8" stroke="#4ce0e6" stroke-width="0.9" opacity="0.8"/>
+
+  <!-- Crossed Ice Hockey Stick & Puck (Top-Left to Bottom-Right) -->
   <path d="M16 32L40 53.5L50 51" stroke="url(#mp-mic)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
   <ellipse cx="45.5" cy="53" rx="3.4" ry="1.6" fill="#08141c" stroke="#4ce0e6" stroke-width="1.4"/>
 
