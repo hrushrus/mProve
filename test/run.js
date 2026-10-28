@@ -177,6 +177,19 @@ ok('coach can populate a group with athlete names', () => {
   assert.strictEqual(maya.Squad_Group, 'Senior Development');
   assert.strictEqual(maya.Athlete_ID, 'ATH-007');
 });
+ok('coach onboarding updates coach squad and populates roster', () => {
+  const res = g.coach_onboardRoster(COACH, {
+    coachSquads: ['National Development', 'Senior Development'],
+    athletes: [{ name: 'Noah Vance', squad: 'Senior Development' }]
+  });
+  assert.strictEqual(res.ok, true);
+  assert.strictEqual(res.added, 1);
+  const me = g.person_(COACH);
+  assert.strictEqual(me.Squad_Group, 'National Development, Senior Development');
+  const squads = g.coachSquads_(me);
+  assert.strictEqual(squads.length, 2);
+  deq(squads, ['National Development', 'Senior Development']);
+});
 ok('nothing is emailed before approval; approve & send emails athlete with parent on CC', () => {
   assert.strictEqual(g.__mail.length, 0);
   assert.strictEqual(g.athlete_home(CHRIS).digests.length, 0);

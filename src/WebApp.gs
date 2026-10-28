@@ -30,6 +30,7 @@ function rpcMap_() {
     coach_approve: coach_approve,
     coach_approveAndSendAll: coach_approveAndSendAll,
     coach_addAthletes: coach_addAthletes,
+    coach_onboardRoster: coach_onboardRoster,
     athlete_home: athlete_home,
     athlete_post: athlete_post,
     athlete_saveJournal: athlete_saveJournal,

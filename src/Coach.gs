@@ -262,3 +262,22 @@ function coach_addAthletes(code, athletes) {
   }
   return { added: newRows.length, athletes: newRows.map(publicPerson_) };
 }
+
+/**
+ * Onboarding setup: sets the coach's assigned squad(s) and populates athletes in one step.
+ * data: { coachSquads: ['National Development'], athletes: [...] }
+ */
+function coach_onboardRoster(code, data) {
+  var me = coach_(code);
+  data = data || {};
+  if (data.coachSquads) {
+    var squadStr = Array.isArray(data.coachSquads) ? data.coachSquads.join(', ') : String(data.coachSquads);
+    updateRow_('Roster_Config', me._row, { Squad_Group: squadStr });
+  }
+  var addedCount = 0;
+  if (data.athletes && data.athletes.length) {
+    var res = coach_addAthletes(code, data.athletes);
+    addedCount = res.added;
+  }
+  return { ok: true, added: addedCount };
+}

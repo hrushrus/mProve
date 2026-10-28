@@ -310,6 +310,10 @@ function boot() {
     var saved = store.get('mprove-view-' + S.me.role);
     var valid = tabsFor().map(function (t) { return t[0]; });
     if (S.me.role === 'Coach') refreshOverview().catch(function () {});
+    if (S.me.role === 'Coach' && (!S.roster.length || store.get('mprove-onboard') === 'pending')) {
+      viewOnboarding(1);
+      return;
+    }
     go(valid.indexOf(saved) !== -1 ? saved : valid[0]);
     flushAll();
   }).catch(function (e) { store.set('mprove-k', ''); signin(e.message); });
@@ -363,6 +367,89 @@ function flushAll() {
 window.addEventListener('online', flushAll);
 setInterval(flushAll, 30000);
 
+/* ---------- coach: onboarding ---------- */
+function viewOnboarding(step) {
+  step = step || 1;
+  setHeader('Onboarding', 'Step ' + step + ' of 2');
+  $('#tabs').hidden = true;
+  var skip = S.roster.length ? '<button class="btn sm" id="onboard-skip" style="border:none;background:none;color:var(--muted);cursor:pointer">Skip to deck ✕</button>' : '';
+
+  if (step === 1) {
+    var club = (S.clubSquads && S.clubSquads.length ? S.clubSquads : ['National Development', 'Provincial Development', 'Senior Development']);
+    var my = S.squads.length ? S.squads : ['National Development'];
+    $('#view').innerHTML =
+      '<div class="card" style="gap:12px">' +
+        '<div class="row"><div><b style="font-size:1.15rem">Welcome to mProve!</b><div class="small">Let\'s set up the team you coach.</div></div>' + skip + '</div>' +
+        '<div style="display:flex;flex-direction:column;gap:6px">' +
+          '<label class="small" style="font-weight:600">Which squad(s) do you coach?</label>' +
+          club.map(function (sq) {
+            var checked = my.indexOf(sq) !== -1 ? 'checked' : '';
+            return '<label style="display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;cursor:pointer">' +
+              '<input type="checkbox" name="onboard-sq" value="' + esc(sq) + '" ' + checked + '> ' +
+              '<span><b>' + esc(sq) + '</b></span></label>';
+          }).join('') +
+          '<div style="margin-top:4px">' +
+            '<label class="small" for="custom-sq">Or add another squad name:</label>' +
+            '<input type="text" id="custom-sq" placeholder="e.g. Junior Development">' +
+          '</div>' +
+        '</div>' +
+        '<div class="btns">' +
+          '<button class="btn primary" id="onboard-step1-next">Next: Add Swimmers →</button>' +
+        '</div>' +
+      '</div>';
+    if ($('#onboard-skip')) $('#onboard-skip').onclick = function () { renderTabs(); go('deck'); };
+    $('#onboard-step1-next').onclick = function () {
+      var sel = $$('input[name="onboard-sq"]:checked').map(function (el) { return el.value; });
+      var custom = ($('#custom-sq').value || '').trim();
+      if (custom && sel.indexOf(custom) === -1) sel.push(custom);
+      if (!sel.length) return toast('Select or enter at least one squad');
+      S.selectedOnboardSquads = sel;
+      viewOnboarding(2);
+    };
+  } else if (step === 2) {
+    var squads = S.selectedOnboardSquads || S.squads || ['National Development'];
+    $('#view').innerHTML =
+      '<div class="card" style="gap:12px">' +
+        '<div class="row"><div><b style="font-size:1.15rem">Add your Swimmers</b><div class="small">Enter swimmer names. We\'ll create IDs and phonetic nicknames automatically.</div></div>' + skip + '</div>' +
+        '<div style="display:flex;flex-direction:column;gap:8px">' +
+          '<label class="small" for="onboard-target-sq" style="font-weight:600">Squad</label>' +
+          '<select id="onboard-target-sq">' +
+            squads.map(function (sq) { return '<option value="' + esc(sq) + '">' + esc(sq) + '</option>'; }).join('') +
+          '</select>' +
+          '<label class="small" for="onboard-names" style="font-weight:600">Swimmer names (one per line)</label>' +
+          '<textarea id="onboard-names" placeholder="Olivia Guo&#10;LeAnne Du&#10;Liam Blais" style="min-height:120px"></textarea>' +
+          '<div class="small">You can also add more swimmers or invite links anytime from the On Deck options.</div>' +
+        '</div>' +
+        '<div class="btns">' +
+          '<button class="btn" id="onboard-back">← Back</button>' +
+          '<button class="btn primary" id="onboard-finish">Save & Start Coaching</button>' +
+        '</div>' +
+      '</div>';
+    if ($('#onboard-skip')) $('#onboard-skip').onclick = function () { renderTabs(); go('deck'); };
+    $('#onboard-back').onclick = function () { viewOnboarding(1); };
+    $('#onboard-finish').onclick = function () {
+      var sq = $('#onboard-target-sq').value;
+      var lines = $('#onboard-names').value.split('\n').map(function (s) { return s.trim(); }).filter(String);
+      var athletes = lines.map(function (name) { return { name: name, squad: sq }; });
+      var btn = this; btn.disabled = true; btn.textContent = 'Saving…';
+      api('coach_onboardRoster', { coachSquads: squads, athletes: athletes }).then(function (r) {
+        store.set('mprove-onboard', 'done');
+        toast('Roster saved! Welcome aboard.');
+        return api('api_bootstrap').then(function (boot) {
+          S.me = boot.me; S.roster = boot.roster; S.squads = boot.squads; S.clubSquads = boot.clubSquads;
+          return refreshOverview();
+        });
+      }).then(function () {
+        renderTabs();
+        go('deck');
+      }).catch(function (err) {
+        btn.disabled = false; btn.textContent = 'Save & Start Coaching';
+        showError(err);
+      });
+    };
+  }
+}
+
 /* ---------- coach: On deck ---------- */
 function defaultSession() {
   var d = new Date(), part = d.getHours() < 12 ? 'AM' : 'PM';
@@ -373,7 +460,10 @@ function viewDeck() {
   if (session.indexOf(dayName(new Date())) === -1) session = defaultSession();
   store.set('mprove-session', session);
   setHeader('On deck', session);
+  var emptyBanner = !S.roster.length ?
+    '<div class="card" style="background:var(--water-soft);border-color:var(--water);gap:8px"><div class="row"><div><b>Your roster is empty</b><div class="small">Add your swimmers to start recording voice notes and tracking coverage.</div></div><button class="btn sm primary" id="deck-onboard-cta">Set up roster →</button></div></div>' : '';
   $('#view').innerHTML =
+    emptyBanner +
     '<div class="card"><div class="row"><span class="label">Coverage this week</span><span id="cov-pill" class="pill plain">…</span></div><div id="coverage" class="coverage"></div></div>' +
     '<div class="recwrap"><button class="rec" id="rec" aria-label="Hold to record a note">HOLD<br>TO TALK<small>or tap to start / stop</small></button></div>' +
     '<div class="status" id="deck-status"></div>' +
@@ -391,6 +481,7 @@ function viewDeck() {
         }).join('') +
         '</div></div>' : '') +
       '<button class="btn sm" id="btn-add-athletes" style="margin-top:4px">+ Add Swimmers to Squad</button>' +
+      '<button class="btn sm" id="btn-onboarding-start" style="margin-top:4px">Roster Onboarding / Setup</button>' +
       '<div id="add-athletes-form" hidden style="background:var(--bg);padding:10px;border-radius:10px;margin:6px 0;display:flex;flex-direction:column;gap:6px">' +
         '<label class="small" for="new-ath-squad">Target squad</label>' +
         '<select id="new-ath-squad">' +
@@ -405,6 +496,8 @@ function viewDeck() {
       '<button class="btn sm" id="upload-memo">Upload a voice memo instead</button>' +
       '<p class="small">Use this if the record button isn\'t allowed on this phone. It opens the phone\'s recorder.</p></details>';
   $('#session-in').onchange = function () { store.set('mprove-session', this.value); setHeader('On deck', this.value); };
+  if ($('#deck-onboard-cta')) $('#deck-onboard-cta').onclick = function () { viewOnboarding(1); };
+  $('#btn-onboarding-start').onclick = function () { viewOnboarding(1); };
   $$('[data-sq]').forEach(function (btn) {
     btn.onclick = function () {
       var tag = this.getAttribute('data-tag');
