@@ -63,7 +63,9 @@ ok('sign-in rejects bad codes and athletes calling coach functions', () => {
   assert.throws(() => g.coach_overview(CHRIS), /Only coaches/);
   const b = g.api_bootstrap(COACH);
   assert.strictEqual(b.roster.length, 6);
-  deq(b.squads, ['National Development', 'Provincial Development', 'Senior Development']);
+  assert.strictEqual(b.squads.length, 1);
+  deq(b.squads, ['National Development']);
+  deq(b.clubSquads, ['National Development', 'Provincial Development', 'Senior Development']);
   const bCoach = g.api_bootstrap('coach');
   assert.strictEqual(bCoach.me.role, 'Coach');
   const bEmpty = g.api_bootstrap('');

@@ -112,17 +112,30 @@ function activeAthletes_() {
 }
 
 /** First call the app makes: who is signed in, and the roster a coach needs. */
+function coachSquads_(coach) {
+  var raw = String(coach.Squad_Group || '').trim();
+  var clubSquads = uniq_(activeAthletes_().map(function (r) { return r.Squad_Group; }).concat(['National Development', 'Provincial Development', 'Senior Development']).filter(String));
+
+  if (!raw || raw.toLowerCase() === 'all' || raw === '*') {
+    return clubSquads;
+  }
+  var list = splitList_(raw);
+  return list.length ? list : clubSquads;
+}
+
+/** First call the app makes: who is signed in, and the roster a coach needs. */
 function api_bootstrap(code) {
   var me = person_(code);
   var today = fmtDate_(new Date());
-  var defaultSquads = ['National Development', 'Provincial Development', 'Senior Development'];
-  var squads = me.Role === 'Coach' ? uniq_(activeAthletes_().map(function (r) { return r.Squad_Group; }).concat(defaultSquads)) : [];
+  var clubSquads = uniq_(activeAthletes_().map(function (r) { return r.Squad_Group; }).concat(['National Development', 'Provincial Development', 'Senior Development']).filter(String));
+  var mySquads = me.Role === 'Coach' ? coachSquads_(me) : (me.Squad_Group ? [me.Squad_Group] : []);
   return {
     me: publicPerson_(me),
     weekStart: weekStartOf_(today),
     today: today,
     roster: me.Role === 'Coach' ? activeAthletes_().map(publicPerson_) : [publicPerson_(me)],
-    squads: squads
+    squads: mySquads,
+    clubSquads: clubSquads
   };
 }
 

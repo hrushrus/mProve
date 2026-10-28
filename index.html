@@ -280,7 +280,7 @@ function fileToWav(file) {
 }
 
 /* ---------- state & navigation ---------- */
-var S = { me: null, roster: [], squads: [], week: '', view: '', overview: null, lastNotes: [], flushing: false };
+var S = { me: null, roster: [], squads: [], clubSquads: [], week: '', view: '', overview: null, lastNotes: [], flushing: false };
 var COACH_TABS = [['deck', 'On deck'], ['review', 'Review'], ['inbox', 'Inbox'], ['weekly', 'Weekly']];
 var ATHLETE_TABS = [['checkins', 'Check-ins'], ['journal', 'Journal'], ['progress', 'Progress']];
 
@@ -306,7 +306,7 @@ document.addEventListener('click', function (e) {
 function boot() {
   if (!CODE) return signin('Open mProve with the personal link your coach shared with you.');
   api('api_bootstrap').then(function (r) {
-    S.me = r.me; S.roster = r.roster; S.squads = r.squads; S.week = r.weekStart;
+    S.me = r.me; S.roster = r.roster; S.squads = r.squads; S.clubSquads = r.clubSquads || r.squads; S.week = r.weekStart;
     var saved = store.get('mprove-view-' + S.me.role);
     var valid = tabsFor().map(function (t) { return t[0]; });
     if (S.me.role === 'Coach') refreshOverview().catch(function () {});
@@ -381,18 +381,20 @@ function viewDeck() {
     '<div id="open-qs"></div>' +
     '<details class="card"><summary class="row"><span class="label">Session & options</span><span class="small">change</span></summary>' +
       '<label class="small" for="session-in">Session tag on every note</label><input type="text" id="session-in" value="' + esc(session) + '">' +
-      '<div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0">' +
-        (S.squads.length ? S.squads : ['National Development', 'Provincial Development', 'Senior Development']).map(function (sq) {
+      (S.squads && S.squads.length > 1 ?
+        '<div style="margin:4px 0"><span class="small" style="font-weight:600">Switch team:</span>' +
+        '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">' +
+        S.squads.map(function (sq) {
           var d = new Date(), part = d.getHours() < 12 ? 'AM' : 'PM', day = dayName(d);
           var active = session.indexOf(sq) !== -1;
           return '<button type="button" class="btn sm' + (active ? ' primary' : '') + '" data-sq="' + esc(sq) + '" data-tag="' + esc(sq + ' · ' + day + ' ' + part) + '" style="flex:1;min-width:110px;padding:6px 8px;font-size:12px">' + esc(sq) + '</button>';
         }).join('') +
-      '</div>' +
+        '</div></div>' : '') +
       '<button class="btn sm" id="btn-add-athletes" style="margin-top:4px">+ Add Swimmers to Squad</button>' +
       '<div id="add-athletes-form" hidden style="background:var(--bg);padding:10px;border-radius:10px;margin:6px 0;display:flex;flex-direction:column;gap:6px">' +
         '<label class="small" for="new-ath-squad">Target squad</label>' +
         '<select id="new-ath-squad">' +
-          (S.squads.length ? S.squads : ['National Development', 'Provincial Development', 'Senior Development']).map(function (sq) {
+          (S.clubSquads && S.clubSquads.length ? S.clubSquads : (S.squads.length ? S.squads : ['National Development', 'Provincial Development', 'Senior Development'])).map(function (sq) {
             return '<option value="' + esc(sq) + '">' + esc(sq) + '</option>';
           }).join('') +
         '</select>' +
@@ -443,13 +445,22 @@ function viewDeck() {
 function renderCoverage() {
   var box = $('#coverage'); if (!box || !S.overview) return;
   var cov = S.overview.coverage;
-  box.innerHTML = cov.map(function (c) {
+  var currentSquad = (S.squads.length === 1) ? S.squads[0] : (S.squads.filter(function (sq) {
+    var session = store.get('mprove-session') || '';
+    return session.indexOf(sq) !== -1;
+  })[0] || null);
+  var list = currentSquad ? cov.filter(function (c) { return !c.squad || c.squad === currentSquad; }) : cov;
+  box.innerHTML = list.map(function (c) {
     var cls = c.notes >= 2 ? '' : (c.notes === 1 ? 'lo' : 'no');
-    return '<div title="' + esc(c.name) + '"><i class="' + cls + '"></i><span>' + esc(c.first) + ' ' + c.notes + '</span></div>';
-  }).join('') || '<span class="small">No athletes in the roster.</span>';
-  var low = cov.filter(function (c) { return c.notes < 2; }).length;
+    return '<div title="' + esc(c.name) + ' (' + esc(c.squad || '') + ')"><i class="' + cls + '"></i><span>' + esc(c.first) + ' ' + c.notes + '</span></div>';
+  }).join('') || '<span class="small">No athletes in this squad.</span>';
+  var low = list.filter(function (c) { return c.notes < 2; }).length;
   var p = $('#cov-pill'); p.textContent = low ? low + ' under 2 notes' : 'Everyone covered'; p.className = 'pill ' + (low ? 'warn' : 'good');
-  var open = S.overview.threads.filter(function (t) { return t.open; });
+  var open = S.overview.threads.filter(function (t) {
+    if (!t.open) return false;
+    var a = S.roster.filter(function (r) { return r.name === t.athlete; })[0];
+    return !currentSquad || !a || a.squad === currentSquad;
+  });
   $('#open-qs').innerHTML = open.length ? '<div class="card"><span class="label">Questions to answer at practice</span>' +
     open.map(function (t) { return '<div class="small"><b>' + esc(t.athlete) + ':</b> ' + esc(t.messages[t.messages.length - 1].text) + '</div>'; }).join('') + '</div>' : '';
 }
