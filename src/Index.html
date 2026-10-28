@@ -455,11 +455,16 @@ function defaultSession() {
   var d = new Date(), part = d.getHours() < 12 ? 'AM' : 'PM';
   return (S.squads[0] || 'National Development') + ' · ' + dayName(d) + ' ' + part;
 }
+function deckPill(session) {
+  var s = String(session || '').trim();
+  if (/^on\s*deck/i.test(s)) return s;
+  return 'On deck · ' + s;
+}
 function viewDeck() {
   var session = (store.get('mprove-session') || defaultSession()).replace('Senior Performance', 'National Development');
   if (session.indexOf(dayName(new Date())) === -1) session = defaultSession();
   store.set('mprove-session', session);
-  setHeader('On deck', session);
+  setHeader('mProve', deckPill(session));
   var emptyBanner = !S.roster.length ?
     '<div class="card" style="background:var(--water-soft);border-color:var(--water);gap:8px"><div class="row"><div><b>Your roster is empty</b><div class="small">Add your swimmers to start recording voice notes and tracking coverage.</div></div><button class="btn sm primary" id="deck-onboard-cta">Set up roster →</button></div></div>' : '';
   $('#view').innerHTML =
@@ -495,7 +500,7 @@ function viewDeck() {
       '</div>' +
       '<button class="btn sm" id="upload-memo">Upload a voice memo instead</button>' +
       '<p class="small">Use this if the record button isn\'t allowed on this phone. It opens the phone\'s recorder.</p></details>';
-  $('#session-in').onchange = function () { store.set('mprove-session', this.value); setHeader('On deck', this.value); };
+  $('#session-in').onchange = function () { store.set('mprove-session', this.value); setHeader('mProve', deckPill(this.value)); };
   if ($('#deck-onboard-cta')) $('#deck-onboard-cta').onclick = function () { viewOnboarding(1); };
   $('#btn-onboarding-start').onclick = function () { viewOnboarding(1); };
   $$('[data-sq]').forEach(function (btn) {
@@ -503,7 +508,7 @@ function viewDeck() {
       var tag = this.getAttribute('data-tag');
       $('#session-in').value = tag;
       store.set('mprove-session', tag);
-      setHeader('On deck', tag);
+      setHeader('mProve', deckPill(tag));
       $$('[data-sq]').forEach(function (b) {
         if (b === btn) b.classList.add('primary'); else b.classList.remove('primary');
       });
